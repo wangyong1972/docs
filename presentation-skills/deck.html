@@ -101,6 +101,9 @@
       justify-content: center;
       position: relative;
       min-width: 0;
+      height: 100vh;
+      overflow: hidden;
+      background: var(--bg);
     }
     #stage {
       position: relative;
@@ -109,22 +112,10 @@
       background: var(--bg-elev);
       box-shadow: 0 8px 30px rgba(0,0,0,.25);
       overflow: hidden;
+      transform-origin: center center;
+      transition: transform 100ms ease-out;
+      flex-shrink: 0;
     }
-    /* scale canvas to viewport — keep aspect, never crop */
-    #stage-wrap { --scale: 1; }
-    @media (max-width: 1500px) {
-      #stage-wrap { --scale: .8; }
-    }
-    @media (max-width: 1200px) {
-      #stage-wrap { --scale: .65; }
-    }
-    @media (max-width: 900px) {
-      #stage-wrap { --scale: .5; }
-    }
-    @media (max-width: 700px) {
-      #stage-wrap { --scale: .4; }
-    }
-    #stage { transform: scale(var(--scale)); transform-origin: center center; }
 
     /* =========================================================
        Slides
@@ -644,24 +635,55 @@ pdftoppm -jpeg -r 150 deck.pdf slide</code></pre>
       <!-- 17: Common Pitfalls -->
       <section class="slide" data-deck="v1" data-section="Checklist" data-title="Common pitfalls">
         <h2>Common Pitfalls &amp; Troubleshooting</h2>
-        <ul>
-          <li><strong>Fixed 1400×900 Canvas:</strong> Slide overflow is <code>hidden</code>, not auto-shrunk. Split crowded content across multiple slides.</li>
-          <li><strong>Sandboxed Chrome Hanging:</strong> Chrome may appear to time out due to GoogleUpdater background processes, but <code>/tmp/*.png</code> is already generated.</li>
-          <li><strong>CSS Color Variables:</strong> Always use <code>var(--accent)</code> and <code>var(--bg-card)</code> so light/dark switching works properly.</li>
-          <li><strong>Marketplace Source:</strong> Never use <code>"directory"</code> in <code>known_marketplaces.json</code>; always use <code>"git"</code> + <code>"file://..."</code>.</li>
-        </ul>
+        <div class="cols-2">
+          <div class="card">
+            <h3>1. Fixed 1400×900 Base Canvas</h3>
+            <p>Slide overflow is <code>hidden</code>, never auto-shrunk. Split crowded content across slides and use the responsive auto-scaler to fill viewports.</p>
+          </div>
+          <div class="card">
+            <h3>2. Sandboxed Headless Chrome</h3>
+            <p>Headless Chrome may appear to time out due to GoogleUpdater background threads, but <code>/tmp/*.png</code> is already generated.</p>
+          </div>
+        </div>
+        <div class="cols-2">
+          <div class="card">
+            <h3>3. Theme Switching &amp; Hardcoded Colors</h3>
+            <p>Never hardcode hex colors in slide markup. Always use CSS variables (<code>var(--accent)</code>, <code>var(--bg-card)</code>) so dark &amp; light modes both shine.</p>
+          </div>
+          <div class="card">
+            <h3>4. Marketplace Source Bug</h3>
+            <p>In <code>known_marketplaces.json</code>, never use <code>"directory"</code>. Always use <code>"git"</code> + <code>"file://..."</code> to avoid relative path bugs.</p>
+          </div>
+        </div>
       </section>
 
       <!-- 18: Reference Links -->
       <section class="slide" data-deck="v1" data-section="Wrap" data-title="Reference &amp; links">
         <h2>Repository &amp; Documentation Links</h2>
+        <div class="cols-2">
+          <div class="card">
+            <h3>🌐 Online Deployments</h3>
+            <p><strong>Live GitHub Pages Presentation:</strong><br>
+               <a href="https://wangyong1972.github.io/docs/presentation-skills/" target="_blank" style="color:var(--accent);">https://wangyong1972.github.io/docs/presentation-skills/</a></p>
+            <p><strong>GitHub Docs Repository:</strong><br>
+               <a href="https://github.com/wangyong1972/docs" target="_blank" style="color:var(--accent);">https://github.com/wangyong1972/docs</a></p>
+            <p><strong>Portal Homepage:</strong><br>
+               <a href="https://wangyong1972.github.io/docs/" target="_blank" style="color:var(--accent);">https://wangyong1972.github.io/docs/</a></p>
+          </div>
+          <div class="card">
+            <h3>💻 Local Machine Paths</h3>
+            <p><strong>Local Marketplace Path:</strong><br>
+               <code>~/projects/claude-plugins-local</code></p>
+            <p><strong>Local Docs Repository:</strong><br>
+               <code>~/projects/github/wangyong1972/docs</code></p>
+            <p><strong>Obsidian How-To Note:</strong><br>
+               <code>my-wiki/03-HowTo/用generate-outline-deck生成演示文稿.md</code></p>
+          </div>
+        </div>
         <div class="card">
-          <p><strong>Live GitHub Pages Presentation:</strong><br>
-             <a href="https://wangyong1972.github.io/docs/presentation-skills/" target="_blank" style="color:var(--accent);">https://wangyong1972.github.io/docs/presentation-skills/</a></p>
-          <p><strong>GitHub Docs Repository:</strong><br>
-             <a href="https://github.com/wangyong1972/docs" target="_blank" style="color:var(--accent);">https://github.com/wangyong1972/docs</a></p>
-          <p><strong>Local Marketplace Path:</strong> <code>~/projects/claude-plugins-local</code></p>
-          <p><strong>Obsidian Note:</strong> <code>my-wiki/03-HowTo/用generate-outline-deck生成演示文稿.md</code></p>
+          <h3>⚡ Quick Start: Clone &amp; Open</h3>
+          <pre><code>git clone https://github.com/wangyong1972/docs.git ~/projects/github/wangyong1972/docs
+open ~/projects/github/wangyong1972/docs/presentation-skills/deck.html</code></pre>
         </div>
       </section>
 
@@ -682,10 +704,22 @@ pdftoppm -jpeg -r 150 deck.pdf slide</code></pre>
 
       <!-- 20: Closing -->
       <section class="slide" data-deck="v1" data-section="Wrap" data-title="Ready to present">
+        <h3>Wrap-up</h3>
         <h1>Ready to Present.</h1>
-        <p class="lede">Open the live presentation in your browser, press <code>f</code> for fullscreen, <code>o</code> for outline, or <code>l</code> for laser pointer.</p>
-        <div>
-          <span class="pill">https://wangyong1972.github.io/docs/presentation-skills/</span>
+        <p class="lede">Open the live presentation in your browser, press <code>f</code> for edge-to-edge fullscreen, <code>o</code> for outline, or <code>l</code> for laser pointer.</p>
+        <div class="cols-3" style="margin-top: 12px;">
+          <div class="card">
+            <h3>Press <code>f</code></h3>
+            <p>Edge-to-edge fullscreen presentation, dynamically scaled to fill 100% of display height.</p>
+          </div>
+          <div class="card">
+            <h3>Press <code>o</code></h3>
+            <p>Toggle outline sidebar for instant topic overview and section jumping.</p>
+          </div>
+          <div class="card">
+            <h3>Press <code>l</code></h3>
+            <p>Activate red laser pointer dot that tracks your mouse cursor in real time.</p>
+          </div>
         </div>
       </section>
 
@@ -802,10 +836,31 @@ pdftoppm -jpeg -r 150 deck.pdf slide</code></pre>
       }
     });
 
+    // ---------- Dynamic Responsive Auto-Scaling ----------
+    function updateScale() {
+      const wrap = document.getElementById('stage-wrap');
+      const stage = document.getElementById('stage');
+      if (!wrap || !stage) return;
+      const isFullscreen = !!document.fullscreenElement;
+      const padX = isFullscreen ? 0 : 24;
+      const padY = isFullscreen ? 0 : 24;
+      const availW = Math.max(wrap.clientWidth - padX, 200);
+      const availH = Math.max(wrap.clientHeight - padY, 200);
+      const scale = Math.min(availW / 1400, availH / 900);
+      stage.style.transform = `scale(${scale})`;
+    }
+
+    window.addEventListener('resize', updateScale);
+    document.addEventListener('fullscreenchange', updateScale);
+    if (window.ResizeObserver) {
+      new ResizeObserver(() => updateScale()).observe(document.getElementById('stage-wrap'));
+    }
+
     // ---------- Toolbar ----------
     function toggleOutline() {
-      document.getElementById('outline').style.display =
-        document.getElementById('outline').style.display === 'none' ? 'block' : 'none';
+      const outline = document.getElementById('outline');
+      outline.style.display = outline.style.display === 'none' ? 'block' : 'none';
+      requestAnimationFrame(updateScale);
     }
     document.getElementById('btn-outline').addEventListener('click', toggleOutline);
 
@@ -896,6 +951,7 @@ pdftoppm -jpeg -r 150 deck.pdf slide</code></pre>
 
     // ---------- Init ----------
     render();
+    updateScale();
 
     // Hide outline button reflects state (purely visual)
     document.getElementById('btn-outline').addEventListener('click', function () {

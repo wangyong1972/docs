@@ -1,0 +1,20 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "claude-plugins-local",
+  "description": "Local Claude Code plugins maintained on this machine. Built from knowledge accumulated in my-wiki.",
+  "owner": {
+    "name": "wangyong"
+  },
+  "plugins": [
+    {
+      "name": "presentation-skills",
+      "description": "Single-file HTML presentation decks with derived outline navigation, icon toolbar (outline / laser pointer / fullscreen / PDF export / theme settings), and deep-link support.",
+      "author": {
+        "name": "wangyong"
+      },
+      "category": "productivity",
+      "source": "./plugins/presentation-skills",
+      "homepage": "https://github.example.invalid/local/presentation-skills"
+    }
+  ]
+}

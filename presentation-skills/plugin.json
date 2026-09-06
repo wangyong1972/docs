@@ -1,0 +1,8 @@
+{
+  "name": "presentation-skills",
+  "description": "Single-file HTML deck generation skills (generate-outline-deck, and future siblings).",
+  "author": {
+    "name": "wangyong"
+  },
+  "version": "0.1.0"
+}

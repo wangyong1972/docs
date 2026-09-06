@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>wangyong's Docs &amp; Presentations</title>
+  <style>
+    :root {
+      --bg: #0b0b0d;
+      --bg-elev: #16161a;
+      --bg-card: #1d1d22;
+      --fg: #e6e6ea;
+      --fg-dim: #9a9aa3;
+      --accent: #6aa9ff;
+      --border: #2a2a31;
+      --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+      --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+      --font-mono: "SF Mono", Menlo, Consolas, monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-ui);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 800px;
+      width: 100%;
+    }
+    h1 {
+      font-family: var(--font-display);
+      font-size: 40px;
+      margin: 0 0 12px;
+      letter-spacing: -0.02em;
+    }
+    p.subtitle {
+      font-size: 20px;
+      color: var(--fg-dim);
+      margin: 0 0 36px;
+      line-height: 1.5;
+    }
+    .deck-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px 32px;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .deck-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(106, 169, 255, 0.15);
+    }
+    .deck-card h2 {
+      margin: 0 0 10px;
+      font-size: 24px;
+      color: var(--fg);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .deck-card .arrow {
+      color: var(--accent);
+      font-size: 20px;
+    }
+    .deck-card p {
+      margin: 0 0 18px;
+      color: var(--fg-dim);
+      font-size: 16px;
+      line-height: 1.6;
+    }
+    .tags {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .pill {
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px 12px;
+      font-size: 13px;
+      color: var(--fg-dim);
+      font-family: var(--font-mono);
+    }
+    footer {
+      margin-top: 48px;
+      font-size: 14px;
+      color: var(--fg-dim);
+      text-align: center;
+    }
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Docs &amp; Presentations</h1>
+    <p class="subtitle">Online technical presentations and reference documentation by wangyong1972.</p>
+
+    <a href="presentation-skills/" class="deck-card">
+      <h2>
+        <span>Presentation Skills Guide</span>
+        <span class="arrow">&rarr;</span>
+      </h2>
+      <p>How to install, configure, and use <code>generate-outline-deck</code> (interactive single-file HTML presentations) and <code>pptx</code> (PowerPoint OpenXML generation) skills locally and on GitHub Pages.</p>
+      <div class="tags">
+        <span class="pill">20 Slides</span>
+        <span class="pill">Outline Navigation</span>
+        <span class="pill">PPTX Skill</span>
+        <span class="pill">Local Marketplace</span>
+        <span class="pill">GitHub Pages</span>
+      </div>
+    </a>
+
+    <footer>
+      Repository: <a href="https://github.com/wangyong1972/docs" target="_blank">github.com/wangyong1972/docs</a> &bull; Hosted with GitHub Pages
+    </footer>
+  </div>
+</body>
+</html>

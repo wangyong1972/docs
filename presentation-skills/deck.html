@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Install & Use the Presentation Skills — Outline-Driven Deck</title>
+  <style>
+    /* =========================================================
+       Theme tokens — both light & dark are fully built.
+       Switch via ⚙ panel (sets data-theme on <html>).
+       ========================================================= */
+    :root {
+      --canvas-w: 1400px;
+      --canvas-h: 900px;
+      --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+      --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+      --font-mono: "SF Mono", Menlo, Consolas, monospace;
+      --transition: 280ms cubic-bezier(.4,.0,.2,1);
+    }
+    [data-theme="dark"] {
+      --bg: #0b0b0d;
+      --bg-elev: #16161a;
+      --bg-card: #1d1d22;
+      --fg: #e6e6ea;
+      --fg-dim: #9a9aa3;
+      --accent: #6aa9ff;
+      --border: #2a2a31;
+      --code-bg: #0f0f12;
+    }
+    [data-theme="light"] {
+      --bg: #fafafa;
+      --bg-elev: #ffffff;
+      --bg-card: #ffffff;
+      --fg: #1a1a1f;
+      --fg-dim: #6b6b75;
+      --accent: #2a6df4;
+      --border: #e3e3e8;
+      --code-bg: #f3f3f6;
+    }
+
+    /* =========================================================
+       Base layout
+       ========================================================= */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-ui);
+      overflow: hidden;
+      height: 100vh;
+    }
+    body { display: flex; }
+
+    /* =========================================================
+       Outline sidebar (left, derived from DOM)
+       ========================================================= */
+    #outline {
+      width: 280px;
+      flex: 0 0 280px;
+      background: var(--bg-elev);
+      border-right: 1px solid var(--border);
+      padding: 24px 16px;
+      overflow-y: auto;
+      font-size: 13px;
+    }
+    #outline h3 {
+      font-family: var(--font-display);
+      font-size: 11px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--fg-dim);
+      margin: 0 8px 12px;
+    }
+    #outline .section-group { margin-bottom: 14px; }
+    #outline .section-name {
+      font-weight: 600;
+      color: var(--fg);
+      padding: 6px 8px;
+      font-size: 12px;
+      letter-spacing: .04em;
+    }
+    #outline ol { list-style: none; margin: 0; padding: 0; }
+    #outline li {
+      padding: 4px 8px 4px 24px;
+      color: var(--fg-dim);
+      cursor: pointer;
+      border-radius: 4px;
+      line-height: 1.4;
+    }
+    #outline li:hover { background: var(--bg-card); color: var(--fg); }
+    #outline li.active { color: var(--accent); background: var(--bg-card); }
+
+    /* =========================================================
+       Stage (right, hosts the 1400×900 canvas)
+       ========================================================= */
+    #stage-wrap {
+      flex: 1 1 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      min-width: 0;
+    }
+    #stage {
+      position: relative;
+      width: var(--canvas-w);
+      height: var(--canvas-h);
+      background: var(--bg-elev);
+      box-shadow: 0 8px 30px rgba(0,0,0,.25);
+      overflow: hidden;
+    }
+    /* scale canvas to viewport — keep aspect, never crop */
+    #stage-wrap { --scale: 1; }
+    @media (max-width: 1500px) {
+      #stage-wrap { --scale: .8; }
+    }
+    @media (max-width: 1200px) {
+      #stage-wrap { --scale: .65; }
+    }
+    @media (max-width: 900px) {
+      #stage-wrap { --scale: .5; }
+    }
+    @media (max-width: 700px) {
+      #stage-wrap { --scale: .4; }
+    }
+    #stage { transform: scale(var(--scale)); transform-origin: center center; }
+
+    /* =========================================================
+       Slides
+       ========================================================= */
+    .slide {
+      position: absolute; inset: 0;
+      padding: 80px 90px;
+      display: none;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 28px;
+    }
+    .slide.active { display: flex; }
+    .slide h1 {
+      font-family: var(--font-display);
+      font-size: 56px;
+      line-height: 1.15;
+      margin: 0;
+      letter-spacing: -.01em;
+    }
+    .slide h2 {
+      font-family: var(--font-display);
+      font-size: 36px;
+      line-height: 1.2;
+      margin: 0;
+      letter-spacing: -.005em;
+    }
+    .slide h3 {
+      font-family: var(--font-display);
+      font-size: 22px;
+      margin: 0 0 6px;
+      color: var(--fg-dim);
+    }
+    .slide p { font-size: 22px; line-height: 1.55; margin: 0; }
+    .slide ul, .slide ol { font-size: 22px; line-height: 1.7; margin: 0; padding-left: 28px; }
+    .slide li { margin-bottom: 6px; }
+    .slide .lede { font-size: 28px; color: var(--fg-dim); }
+    .slide .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 28px;
+    }
+    .slide pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px 24px;
+      font-family: var(--font-mono);
+      font-size: 16px;
+      line-height: 1.5;
+      overflow: auto;
+      max-height: 100%;
+    }
+    .slide code { font-family: var(--font-mono); }
+    .slide .pill {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      font-size: 14px;
+      color: var(--fg-dim);
+      margin-right: 8px;
+    }
+    .slide .cols-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+    .slide .cols-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+
+    /* =========================================================
+       Toolbar (top-right of stage)
+       ========================================================= */
+    #toolbar {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: flex;
+      gap: 6px;
+      z-index: 10;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 4px;
+    }
+    #toolbar button {
+      background: transparent;
+      border: 0;
+      color: var(--fg);
+      width: 34px; height: 34px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #toolbar button:hover { background: var(--bg-elev); }
+    #toolbar button.active { background: var(--accent); color: white; }
+
+    /* =========================================================
+       Status bar (bottom-right, slide counter + progress)
+       ========================================================= */
+    #statusbar {
+      position: absolute;
+      bottom: 16px; right: 24px;
+      font-size: 13px;
+      color: var(--fg-dim);
+      font-family: var(--font-mono);
+      z-index: 5;
+    }
+    #progress {
+      position: absolute;
+      bottom: 0; left: 0;
+      height: 3px;
+      background: var(--accent);
+      transition: width var(--transition);
+    }
+
+    /* =========================================================
+       Laser pointer (hidden until toggled)
+       ========================================================= */
+    #laser {
+      position: fixed;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: #ff3b30;
+      box-shadow: 0 0 10px rgba(255,59,48,.8);
+      pointer-events: none;
+      display: none;
+      z-index: 1000;
+      transform: translate(-50%, -50%);
+    }
+
+    /* =========================================================
+       Settings modal
+       ========================================================= */
+    #settings-modal {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+    #settings-modal.open { display: flex; }
+    #settings-modal .panel {
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px 32px;
+      width: 420px;
+    }
+    #settings-modal h2 {
+      margin: 0 0 20px;
+      font-family: var(--font-display);
+      font-size: 20px;
+    }
+    #settings-modal label {
+      display: block;
+      margin: 14px 0 4px;
+      font-size: 13px;
+      color: var(--fg-dim);
+    }
+    #settings-modal select {
+      width: 100%;
+      padding: 8px 10px;
+      background: var(--bg-card);
+      color: var(--fg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    /* =========================================================
+       Print (PDF export) — one slide per page, hide chrome
+       ========================================================= */
+    @media print {
+      body { overflow: visible; height: auto; }
+      #outline, #toolbar, #statusbar, #progress, #laser, #settings-modal { display: none !important; }
+      #stage-wrap { display: block; }
+      #stage {
+        transform: none !important;
+        box-shadow: none;
+        page-break-after: always;
+        break-after: page;
+      }
+      .slide { display: flex !important; position: relative; inset: auto; }
+      /* only show the active slide during print, then advance via window.print slicing in JS */
+    }
+  </style>
+</head>
+<body>
+
+  <!-- =================== Outline sidebar =================== -->
+  <nav id="outline" aria-label="Outline">
+    <h3>Outline</h3>
+    <div id="outline-tree"><!-- derived from DOM by JS --></div>
+  </nav>
+
+  <!-- =================== Stage =================== -->
+  <div id="stage-wrap">
+    <div id="stage">
+
+      <!-- Toolbar -->
+      <div id="toolbar">
+        <button id="btn-outline" title="Toggle outline (o)">☰</button>
+        <button id="btn-laser" title="Laser pointer (l)">●</button>
+        <button id="btn-fullscreen" title="Fullscreen (f)">⛶</button>
+        <button id="btn-pdf" title="Export PDF (p)">📄</button>
+        <button id="btn-settings" title="Settings (s)">⚙</button>
+      </div>
+
+      <!-- Status + progress -->
+      <div id="statusbar"><span id="slideCounter">1 / 1</span></div>
+      <div id="progress" style="width: 0%"></div>
+
+      <!-- ============================================================
+           SLIDES — presentation-skills & pptx complete guide.
+           This deck is built with generate-outline-deck.
+           ============================================================ -->
+
+      <!-- 1: Title -->
+      <section class="slide active" data-deck="v1" data-section="Intro" data-title="Title">
+        <h3>presentation skills · local install & workflow</h3>
+        <h1>Presentation Skills Guide</h1>
+        <p class="lede">Complete walkthrough for <code>generate-outline-deck</code> (HTML) &amp; <code>pptx</code> (PowerPoint) with local execution &amp; GitHub Pages.</p>
+        <div>
+          <span class="pill">generate-outline-deck</span>
+          <span class="pill">pptx skill</span>
+          <span class="pill">claude-plugins-local</span>
+          <span class="pill">GitHub Pages</span>
+        </div>
+      </section>
+
+      <!-- 2: Dual-Skill Architecture -->
+      <section class="slide" data-deck="v1" data-section="Intro" data-title="Two skills">
+        <h2>Two Skills for Two Presentation Worlds</h2>
+        <div class="cols-2">
+          <div class="card">
+            <h3>1. generate-outline-deck</h3>
+            <p><strong>Format:</strong> Single-file standalone HTML (CSS + JS inline)</p>
+            <p><strong>Core strength:</strong> Left outline navigation, laser pointer, dark mode, deep links.</p>
+            <p><strong>Best for:</strong> Web-first technical walkthroughs, internal documentation, instant GitHub Pages hosting.</p>
+          </div>
+          <div class="card">
+            <h3>2. pptx skill</h3>
+            <p><strong>Format:</strong> Native Microsoft PowerPoint (<code>.pptx</code> / <code>.potx</code>)</p>
+            <p><strong>Core strength:</strong> Programmatic creation via <code>pptxgenjs</code> or corporate template surgery.</p>
+            <p><strong>Best for:</strong> Executive decks, offline presentations, enterprise templates.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3: Decision Matrix -->
+      <section class="slide" data-deck="v1" data-section="Intro" data-title="Decision matrix">
+        <h2>Which Skill Should You Choose?</h2>
+        <div class="cols-3">
+          <div class="card">
+            <h3>generate-outline-deck</h3>
+            <p>• Trigger: <em>"做个演示 / make a deck / generate presentation"</em></p>
+            <p>• Audience can open in browser</p>
+            <p>• Needs sidebar outline &amp; fast jump</p>
+            <p>• Zero runtime build dependencies</p>
+          </div>
+          <div class="card">
+            <h3>pptx skill</h3>
+            <p>• Trigger: <em>"做个PPT / make a pptx / .pptx file"</em></p>
+            <p>• Audience expects PowerPoint attachment</p>
+            <p>• Requires corporate <code>.potx</code> template</p>
+            <p>• Needs native charts &amp; presenter notes</p>
+          </div>
+          <div class="card">
+            <h3>Plain Markdown (---)</h3>
+            <p>• Trigger: <em>"快速整理3页大纲"</em></p>
+            <p>• Short, linear lightning talks</p>
+            <p>• No navigation or design polish needed</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4: Outline Deck Features -->
+      <section class="slide" data-deck="v1" data-section="Outline Skill" data-title="Outline features">
+        <h2>generate-outline-deck: Core Features</h2>
+        <div class="cols-3">
+          <div class="card">
+            <h3>Derived Outline</h3>
+            <p>Left navigation automatically groups slides by <code>data-section</code>. Highlight and page counter sync live as you advance.</p>
+          </div>
+          <div class="card">
+            <h3>Presenter Tools</h3>
+            <p>☰ Outline toggle · ● Laser pointer (mouse cursor tracking) · ⛶ Fullscreen · 📄 PDF export · ⚙ Theme &amp; Font settings.</p>
+          </div>
+          <div class="card">
+            <h3>Deep Links &amp; Themes</h3>
+            <p><code>deck.html#5</code> opens directly to slide 5. Default dark theme (<code>#0b0b0d</code>) with one-click light theme switch.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5: Outline Slide Anatomy -->
+      <section class="slide" data-deck="v1" data-section="Outline Skill" data-title="Slide anatomy">
+        <h2>Outline Deck: Slide Anatomy</h2>
+        <p class="lede">Every slide is a <code>&lt;section class="slide"&gt;</code> with three metadata attributes:</p>
+        <pre><code>&lt;section class="slide"
+         data-deck="v1"        &lt;!-- Deck version group (keep "v1" for single-version) --&gt;
+         data-section="Guide"  &lt;!-- Section group heading in left outline --&gt;
+         data-title="Install"&gt; &lt;!-- Clickable item title in outline sidebar --&gt;
+  &lt;h2&gt;Slide Content&lt;/h2&gt;
+  &lt;p&gt;Paragraph, lists, or layout grids here.&lt;/p&gt;
+&lt;/section&gt;</code></pre>
+        <p>Adding, removing, or reordering sections automatically updates the outline tree, counter, and progress bar.</p>
+      </section>
+
+      <!-- 6: Outline Keyboard Shortcuts -->
+      <section class="slide" data-deck="v1" data-section="Outline Skill" data-title="Keyboard shortcuts">
+        <h2>Outline Deck: Keyboard Shortcuts</h2>
+        <div class="cols-2">
+          <div class="card">
+            <h3>Slide Navigation</h3>
+            <p><code>→</code> / <code>Space</code> / <code>PageDown</code> — Next slide</p>
+            <p><code>←</code> / <code>PageUp</code> — Previous slide</p>
+            <p><code>Home</code> / <code>End</code> — Jump to first / last slide</p>
+          </div>
+          <div class="card">
+            <h3>Presenter Utilities</h3>
+            <p><code>o</code> — Toggle left outline sidebar</p>
+            <p><code>l</code> — Toggle laser pointer dot</p>
+            <p><code>f</code> — Toggle fullscreen mode</p>
+            <p><code>p</code> — Open browser PDF print dialog</p>
+            <p><code>s</code> / <code>Esc</code> — Open / close settings modal</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7: Outline Install via Local Marketplace -->
+      <section class="slide" data-deck="v1" data-section="Outline Skill" data-title="Install marketplace">
+        <h2>Install Outline Skill: Local Marketplace</h2>
+        <p class="lede">Manage the skill locally via <code>claude-plugins-local</code> git marketplace:</p>
+        <pre><code># 1. Local marketplace repository location
+cd ~/projects/claude-plugins-local
+# Contains: plugins/presentation-skills/skills/generate-outline-deck/
+
+# 2. Register in Claude Code (~/.claude/plugins/known_marketplaces.json)
+{
+  "claude-plugins-local": {
+    "source": "git",
+    "url": "file:///Users/wangyong/projects/claude-plugins-local"
+  }
+}</code></pre>
+        <p><strong>Crucial Rule:</strong> Marketplace source must be <code>"git"</code> + <code>"file://..."</code>. Do NOT use <code>"directory"</code> due to known Claude Code relative path resolution bugs (#23978 / #26861).</p>
+      </section>
+
+      <!-- 8: Running Outline Deck Locally -->
+      <section class="slide" data-deck="v1" data-section="Outline Skill" data-title="Run outline locally">
+        <h2>Run Outline Deck Locally</h2>
+        <div class="cols-2">
+          <div class="card">
+            <h3>1. Direct File Opening</h3>
+            <p>Double-click <code>deck.html</code> or run in terminal:</p>
+            <pre><code>open deck.html
+# Or specify Google Chrome:
+open -a "Google Chrome" deck.html</code></pre>
+            <p>All client-side JS works offline without any web server.</p>
+          </div>
+          <div class="card">
+            <h3>2. Local Static HTTP Server</h3>
+            <p>Ideal for testing query params (<code>?deck=v2</code>) and deep links:</p>
+            <pre><code>cd ~/projects/github/wangyong1972/docs/
+python3 -m http.server 8000
+# Visit http://127.0.0.1:8000/presentation-skills/deck.html</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- 9: PPTX Skill Overview -->
+      <section class="slide" data-deck="v1" data-section="PPTX Skill" data-title="PPTX overview">
+        <h2>pptx Skill: Architecture &amp; Approaches</h2>
+        <p class="lede">A PowerPoint <code>.pptx</code> file is a ZIP package containing OpenXML structures.</p>
+        <div class="cols-2">
+          <div class="card">
+            <h3>Approach A: Programmatic (pptxgenjs)</h3>
+            <p>• Write a Node.js script using <code>require('pptxgenjs')</code>.</p>
+            <p>• Build slides, shapes, tables, and native charts from scratch.</p>
+            <p>• Validate output with <code>python scripts/office/validate.py</code>.</p>
+          </div>
+          <div class="card">
+            <h3>Approach B: Template Surgery</h3>
+            <p>• Unpack existing <code>.potx</code> template: <code>zipfile.extractall()</code>.</p>
+            <p>• Duplicate slide layout: <code>python scripts/add_slide.py</code>.</p>
+            <p>• Edit <code>ppt/slides/slideN.xml</code> via minidom, then clean &amp; zip.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 10: PPTX Local Environment Setup -->
+      <section class="slide" data-deck="v1" data-section="PPTX Skill" data-title="PPTX local setup">
+        <h2>pptx Skill: Local Environment Setup</h2>
+        <p class="lede">Run these once on macOS to equip your machine for PPTX authoring and rendering:</p>
+        <pre><code># 1. Node.js environment (for pptxgenjs script execution)
+npm install -g pptxgenjs react-icons react react-dom sharp
+
+# 2. Python parsing & validation tools
+pip install "markitdown[pptx]" Pillow defusedxml lxml
+
+# 3. Headless PDF & image conversion tools (macOS Homebrew)
+brew install poppler           # provides pdftoppm for visual rendering
+brew install --cask libreoffice # provides soffice for headless PDF conversion</code></pre>
+      </section>
+
+      <!-- 11: PPTX Script Toolchain -->
+      <section class="slide" data-deck="v1" data-section="PPTX Skill" data-title="PPTX toolchain">
+        <h2>pptx Skill: Script Toolchain</h2>
+        <div class="cols-2">
+          <div class="card">
+            <h3>Validation &amp; Conversion</h3>
+            <p><code>scripts/office/validate.py deck.pptx</code><br>Verifies OpenXML schemas, rels, and native charts.</p>
+            <p><code>scripts/office/soffice.py --headless --convert-to pdf deck.pptx</code><br>Safe LibreOffice wrapper for headless PDF conversion.</p>
+          </div>
+          <div class="card">
+            <h3>Layout &amp; Packaging</h3>
+            <p><code>scripts/thumbnail.py deck.pptx [prefix]</code><br>Generates labeled thumbnail grid of all slides.</p>
+            <p><code>scripts/add_slide.py unpacked/ slide2.xml -o out.pptx</code><br>Duplicates slide layout with full package bookkeeping.</p>
+            <p><code>scripts/clean.py unpacked/</code><br>Removes orphaned slides, media, and unused relationships.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 12: PPTX Critical Gotchas -->
+      <section class="slide" data-deck="v1" data-section="PPTX Skill" data-title="PPTX gotchas">
+        <h2>pptx Skill: Critical Gotchas &amp; Rules</h2>
+        <ul>
+          <li><strong>Colors: Never <code>#</code>, never 8 digits!</strong> Use <code>color: "FF0000"</code>. Including <code>#</code> or hex alpha <strong>corrupts the file</strong>.</li>
+          <li><strong>Layout sizing:</strong> Default <code>LAYOUT_16x9</code> is <code>10" × 5.625"</code>. For widescreen 16:9 use <code>LAYOUT_WIDE</code> (<code>13.3" × 7.5"</code>).</li>
+          <li><strong>Shadow offset:</strong> Offset MUST be &ge; 0. Negative offset corrupts file. Use <code>angle: 270</code> for upward shadows.</li>
+          <li><strong>Fresh options object:</strong> pptxgenjs mutates option objects in place into EMUs — never reuse an options object.</li>
+          <li><strong>Charts:</strong> Stacked bar charts require <code>dataLabelPosition: "ctr" | "inEnd" | "inBase"</code>.</li>
+        </ul>
+      </section>
+
+      <!-- 13: Publish to GitHub Pages -->
+      <section class="slide" data-deck="v1" data-section="Publish" data-title="GitHub Pages">
+        <h2>Publish to GitHub Pages (wangyong1972/docs)</h2>
+        <pre><code># 1. Create remote repository via GitHub CLI
+gh repo create wangyong1972/docs --public --description "Docs &amp; Presentations"
+
+# 2. Push repository structure to origin main
+git add . &amp;&amp; git commit -m "Add presentation-skills deck"
+git push -u origin main
+
+# 3. Enable GitHub Pages on main branch
+gh repo edit wangyong1972/docs --enable-pages --pages-branch main
+
+# 4. Access live presentation URL
+# https://wangyong1972.github.io/docs/presentation-skills/</code></pre>
+      </section>
+
+      <!-- 14: Repo Multi-Deck Architecture -->
+      <section class="slide" data-deck="v1" data-section="Publish" data-title="Repo architecture">
+        <h2>Multi-Deck Documentation Repository Layout</h2>
+        <pre><code>~/projects/github/wangyong1972/docs/
+├── index.html                    # Root portal landing page with links to all decks
+├── README.md                     # Repo overview, presentation links &amp; quickstart
+└── presentation-skills/          # Specific presentation directory
+    ├── deck.html                 # Outline presentation deck (master source)
+    ├── index.html                # Entry copy for clean URL access
+    ├── SKILL.md                  # generate-outline-deck skill documentation
+    ├── PPTX-SKILL.md             # pptx skill documentation
+    ├── components.md             # Visual component copy-paste reference
+    └── publishing.md             # Multi-target publishing guide</code></pre>
+      </section>
+
+      <!-- 15: Visual QA & PDF Export -->
+      <section class="slide" data-deck="v1" data-section="Publish" data-title="Visual QA &amp; PDF">
+        <h2>Visual QA &amp; PDF Export</h2>
+        <div class="cols-2">
+          <div class="card">
+            <h3>Outline Deck QA &amp; Export</h3>
+            <p><strong>In-browser:</strong> Click 📄 (or press <code>p</code>) &rarr; print to PDF.</p>
+            <p><strong>Headless Chrome:</strong></p>
+            <pre><code>"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+  --headless=new --disable-gpu --no-sandbox \
+  --screenshot=/tmp/deck-slide1.png \
+  --window-size=1500,980 \
+  "file://$(pwd)/deck.html#1"</code></pre>
+          </div>
+          <div class="card">
+            <h3>PPTX QA &amp; Export</h3>
+            <p><strong>Schema QA:</strong> <code>python scripts/office/validate.py deck.pptx</code></p>
+            <p><strong>Visual slide render:</strong></p>
+            <pre><code>python scripts/office/soffice.py --headless \
+  --convert-to pdf deck.pptx
+pdftoppm -jpeg -r 150 deck.pdf slide</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- 16: Local Setup Checklist -->
+      <section class="slide" data-deck="v1" data-section="Checklist" data-title="Setup checklist">
+        <h2>Local Machine Installation Checklist</h2>
+        <div class="cols-2">
+          <div class="card">
+            <h3>Outline Deck Readiness</h3>
+            <p>&#x2714; <code>claude-plugins-local</code> cloned in <code>~/projects/</code></p>
+            <p>&#x2714; Registered in <code>~/.claude/plugins/known_marketplaces.json</code></p>
+            <p>&#x2714; <code>deck-template.html</code> available in assets</p>
+            <p>&#x2714; Local browser opens <code>deck.html</code> cleanly</p>
+          </div>
+          <div class="card">
+            <h3>PPTX Readiness</h3>
+            <p>&#x2714; Node.js + <code>pptxgenjs</code> available</p>
+            <p>&#x2714; Python 3 + <code>markitdown</code>, <code>defusedxml</code>, <code>lxml</code></p>
+            <p>&#x2714; LibreOffice installed in <code>/Applications/</code></p>
+            <p>&#x2714; Poppler (<code>pdftoppm</code>) installed via Homebrew</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 17: Common Pitfalls -->
+      <section class="slide" data-deck="v1" data-section="Checklist" data-title="Common pitfalls">
+        <h2>Common Pitfalls &amp; Troubleshooting</h2>
+        <ul>
+          <li><strong>Fixed 1400×900 Canvas:</strong> Slide overflow is <code>hidden</code>, not auto-shrunk. Split crowded content across multiple slides.</li>
+          <li><strong>Sandboxed Chrome Hanging:</strong> Chrome may appear to time out due to GoogleUpdater background processes, but <code>/tmp/*.png</code> is already generated.</li>
+          <li><strong>CSS Color Variables:</strong> Always use <code>var(--accent)</code> and <code>var(--bg-card)</code> so light/dark switching works properly.</li>
+          <li><strong>Marketplace Source:</strong> Never use <code>"directory"</code> in <code>known_marketplaces.json</code>; always use <code>"git"</code> + <code>"file://..."</code>.</li>
+        </ul>
+      </section>
+
+      <!-- 18: Reference Links -->
+      <section class="slide" data-deck="v1" data-section="Wrap" data-title="Reference &amp; links">
+        <h2>Repository &amp; Documentation Links</h2>
+        <div class="card">
+          <p><strong>Live GitHub Pages Presentation:</strong><br>
+             <a href="https://wangyong1972.github.io/docs/presentation-skills/" target="_blank" style="color:var(--accent);">https://wangyong1972.github.io/docs/presentation-skills/</a></p>
+          <p><strong>GitHub Docs Repository:</strong><br>
+             <a href="https://github.com/wangyong1972/docs" target="_blank" style="color:var(--accent);">https://github.com/wangyong1972/docs</a></p>
+          <p><strong>Local Marketplace Path:</strong> <code>~/projects/claude-plugins-local</code></p>
+          <p><strong>Obsidian Note:</strong> <code>my-wiki/03-HowTo/用generate-outline-deck生成演示文稿.md</code></p>
+        </div>
+      </section>
+
+      <!-- 19: Summary -->
+      <section class="slide" data-deck="v1" data-section="Wrap" data-title="Summary">
+        <h2>Summary: Two Powerful Skillsets</h2>
+        <div class="cols-2">
+          <div class="card">
+            <h3>Modern Web Presenting</h3>
+            <p>Use <code>generate-outline-deck</code> for instant, interactive, outline-navigated presentations with zero build tools, hosted directly on GitHub Pages.</p>
+          </div>
+          <div class="card">
+            <h3>Enterprise Office Presenting</h3>
+            <p>Use <code>pptx</code> skill for strictly formatted, native PowerPoint decks with validated XML structures and automated layout generation.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 20: Closing -->
+      <section class="slide" data-deck="v1" data-section="Wrap" data-title="Ready to present">
+        <h1>Ready to Present.</h1>
+        <p class="lede">Open the live presentation in your browser, press <code>f</code> for fullscreen, <code>o</code> for outline, or <code>l</code> for laser pointer.</p>
+        <div>
+          <span class="pill">https://wangyong1972.github.io/docs/presentation-skills/</span>
+        </div>
+      </section>
+
+
+    </div>
+  </div>
+
+  <!-- =================== Settings modal =================== -->
+  <div id="settings-modal" role="dialog" aria-label="Settings">
+    <div class="panel">
+      <h2>Settings</h2>
+      <label for="theme-select">Theme</label>
+      <select id="theme-select">
+        <option value="dark">Dark</option>
+        <option value="light">Light</option>
+      </select>
+      <label for="font-select">Font</label>
+      <select id="font-select">
+        <option value="SF Pro">SF Pro</option>
+        <option value="Helvetica">Helvetica</option>
+        <option value="Avenir">Avenir</option>
+        <option value="Georgia">Georgia</option>
+        <option value="Menlo">Menlo</option>
+      </select>
+      <label for="transition-select">Transition</label>
+      <select id="transition-select">
+        <option value="fade">Fade</option>
+        <option value="slide-left">Slide left</option>
+        <option value="zoom">Zoom</option>
+        <option value="none">None</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- =================== Laser pointer dot =================== -->
+  <div id="laser"></div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    // ---------- Derived outline ----------
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    const tree = document.getElementById('outline-tree');
+    const sections = {};
+    slides.forEach((s, i) => {
+      const sec = s.dataset.section || '(no section)';
+      if (!sections[sec]) sections[sec] = [];
+      sections[sec].push({ idx: i, title: s.dataset.title || `slide ${i + 1}` });
+    });
+    Object.keys(sections).forEach(secName => {
+      const group = document.createElement('div');
+      group.className = 'section-group';
+      const head = document.createElement('div');
+      head.className = 'section-name';
+      head.textContent = secName;
+      group.appendChild(head);
+      const ol = document.createElement('ol');
+      sections[secName].forEach(({ idx, title }) => {
+        const li = document.createElement('li');
+        li.textContent = `${idx + 1}. ${title}`;
+        li.dataset.idx = idx;
+        li.addEventListener('click', () => goTo(idx));
+        ol.appendChild(li);
+      });
+      group.appendChild(ol);
+      tree.appendChild(group);
+    });
+
+    // ---------- Navigation state ----------
+    let current = parseInt(location.hash.replace('#', ''), 10);
+    if (!Number.isFinite(current) || current < 1 || current > slides.length) current = 1;
+    current = current - 1;
+
+    const counter = document.getElementById('slideCounter');
+    const progress = document.getElementById('progress');
+    const outlineItems = () => document.querySelectorAll('#outline li');
+
+    function render() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+      outlineItems().forEach(li => {
+        li.classList.toggle('active', Number(li.dataset.idx) === current);
+      });
+      location.hash = current + 1;
+    }
+
+    function goTo(i) {
+      if (i < 0 || i >= slides.length) return;
+      current = i;
+      render();
+    }
+
+    function next() { goTo(Math.min(current + 1, slides.length - 1)); }
+    function prev() { goTo(Math.max(current - 1, 0)); }
+
+    // ---------- Keyboard ----------
+    document.addEventListener('keydown', e => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+      switch (e.key) {
+        case 'ArrowRight': case 'PageDown': case ' ': next(); e.preventDefault(); break;
+        case 'ArrowLeft':  case 'PageUp':           prev(); e.preventDefault(); break;
+        case 'Home': goTo(0); break;
+        case 'End':  goTo(slides.length - 1); break;
+        case 'o': case 'O': toggleOutline(); break;
+        case 'l': case 'L': toggleLaser(); break;
+        case 'f': case 'F': toggleFullscreen(); break;
+        case 'p': case 'P': exportPdf(); break;
+        case 's': case 'S': openSettings(); break;
+        case 'Escape':
+          document.getElementById('settings-modal').classList.remove('open');
+          break;
+      }
+    });
+
+    // ---------- Toolbar ----------
+    function toggleOutline() {
+      document.getElementById('outline').style.display =
+        document.getElementById('outline').style.display === 'none' ? 'block' : 'none';
+    }
+    document.getElementById('btn-outline').addEventListener('click', toggleOutline);
+
+    // ---------- Laser pointer ----------
+    const laser = document.getElementById('laser');
+    let laserOn = false;
+    function toggleLaser() {
+      laserOn = !laserOn;
+      laser.style.display = laserOn ? 'block' : 'none';
+      document.getElementById('btn-laser').classList.toggle('active', laserOn);
+    }
+    document.addEventListener('mousemove', e => {
+      laser.style.left = e.clientX + 'px';
+      laser.style.top  = e.clientY + 'px';
+    });
+    document.getElementById('btn-laser').addEventListener('click', toggleLaser);
+
+    // ---------- Fullscreen ----------
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    }
+    document.getElementById('btn-fullscreen').addEventListener('click', toggleFullscreen);
+
+    // ---------- PDF export (uses browser print) ----------
+    function exportPdf() {
+      // Show all slides during print, then restore.
+      const wasActive = slides.map(s => s.classList.contains('active'));
+      slides.forEach(s => s.classList.add('active'));
+      const onAfter = () => {
+        slides.forEach((s, i) => s.classList.toggle('active', wasActive[i]));
+        window.removeEventListener('afterprint', onAfter);
+      };
+      window.addEventListener('afterprint', onAfter);
+      window.print();
+    }
+    document.getElementById('btn-pdf').addEventListener('click', exportPdf);
+
+    // ---------- Settings ----------
+    const settingsModal = document.getElementById('settings-modal');
+    function openSettings()  { settingsModal.classList.add('open'); }
+    function closeSettings() { settingsModal.classList.remove('open'); }
+    document.getElementById('btn-settings').addEventListener('click', openSettings);
+    settingsModal.addEventListener('click', e => { if (e.target === settingsModal) closeSettings(); });
+
+    const themeSel = document.getElementById('theme-select');
+    const fontSel  = document.getElementById('font-select');
+    const transSel = document.getElementById('transition-select');
+
+    themeSel.value = document.documentElement.dataset.theme || 'dark';
+    themeSel.addEventListener('change', () => {
+      document.documentElement.dataset.theme = themeSel.value;
+      try { localStorage.setItem('deck-theme', themeSel.value); } catch (_) {}
+    });
+    fontSel.addEventListener('change', () => {
+      document.documentElement.style.setProperty('--font-ui', fontFamilyFor(fontSel.value));
+      document.documentElement.style.setProperty('--font-display', fontFamilyFor(fontSel.value));
+    });
+    transSel.addEventListener('change', () => {
+      const t = transSel.value;
+      const map = {
+        'fade':      '280ms cubic-bezier(.4,.0,.2,1)',
+        'slide-left': '320ms cubic-bezier(.4,.0,.2,1)',
+        'zoom':      '280ms cubic-bezier(.4,.0,.2,1)',
+        'none':      '0ms'
+      };
+      document.documentElement.style.setProperty('--transition', map[t]);
+    });
+    function fontFamilyFor(name) {
+      switch (name) {
+        case 'SF Pro':    return '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif';
+        case 'Helvetica': return '"Helvetica Neue", Helvetica, Arial, sans-serif';
+        case 'Avenir':    return 'Avenir, "Avenir Next", -apple-system, sans-serif';
+        case 'Georgia':   return 'Georgia, "Times New Roman", serif';
+        case 'Menlo':     return '"SF Mono", Menlo, Consolas, monospace';
+        default:          return '-apple-system, BlinkMacSystemFont, sans-serif';
+      }
+    }
+
+    // ---------- Restore prefs ----------
+    try {
+      const savedTheme = localStorage.getItem('deck-theme');
+      if (savedTheme) {
+        document.documentElement.dataset.theme = savedTheme;
+        themeSel.value = savedTheme;
+      }
+    } catch (_) {}
+
+    // ---------- Init ----------
+    render();
+
+    // Hide outline button reflects state (purely visual)
+    document.getElementById('btn-outline').addEventListener('click', function () {
+      this.classList.toggle('active');
+    });
+  })();
+  </script>
+</body>
+</html>

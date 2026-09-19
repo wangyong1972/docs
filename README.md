@@ -36,6 +36,19 @@ Hosted live via GitHub Pages:
   - Prepare–Execute–Commit: staged writes, snapshot reads, atomic publish.
 - **Note:** the paper has **no public code repository**; it is an architecture blueprint for an internal Ant Group system.
 
+### [DataProphet — Predicting Data Influence Before Training](https://wangyong1972.github.io/docs/papers/DataProphet/)
+- **Outline Deck:** [https://wangyong1972.github.io/docs/papers/DataProphet/](https://wangyong1972.github.io/docs/papers/DataProphet/)
+- **Slidev Deck (built SPA):** [https://wangyong1972.github.io/docs/papers/DataProphet/slidev/build/](https://wangyong1972.github.io/docs/papers/DataProphet/slidev/build/)
+- **Local Path:** `papers/DataProphet/`
+- **Paper:** [Demystifying Supervision Data Generalization in Multimodal LMs](https://proceedings.iclr.cc/paper_files/paper/2026/hash/edcd1aa172dceda2ea9d45a48f25d3e3-Abstract-Conference.html) — **ICLR 2026** · [code (MIT)](https://github.com/DataProphet26/dataprophet) · [dataset](https://huggingface.co/datasets/THUQiXuan/DataProphet)
+- **Topics Covered:**
+  - Predicting a dataset's influence on a target benchmark **before any training**, with a training-free metric.
+  - The measured **14 × 14 influence matrix**: influence is asymmetric, and dataset-specific rather than task-category-specific.
+  - DATAPROPHET = multimodal perplexity × cross-modal similarity × source diversity, and why the product form matters.
+  - Why influence being asymmetric forces a **two-way evaluation protocol** (τ_Tgt and τ_Src).
+  - Ablation ordering: perplexity ≫ image similarity ≈ diversity > text similarity; plus four heuristics that failed.
+  - Data selection on real, synthetic and RL pools — including why "beats the Oracle by 0.2%" should be discounted.
+
 ---
 
 ## 💻 Running Locally

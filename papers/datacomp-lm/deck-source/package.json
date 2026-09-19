@@ -1,0 +1,7 @@
+{
+  "name": "datacomp-lm-deck",
+  "private": true,
+  "description": "Editable 16:9 .pptx deck generator for the datacomp-lm paper. Outputs ../deck.pptx.",
+  "scripts": { "build": "node generate.cjs" },
+  "dependencies": { "pptxgenjs": "^4.0.1" }
+}

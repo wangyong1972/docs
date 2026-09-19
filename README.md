@@ -51,6 +51,35 @@ Hosted live via GitHub Pages:
 
 ---
 
+### [Data-Juicer 1.0 → 2.0 — A Data OS for Foundation Models](https://wangyong1972.github.io/docs/papers/data-juicer/)
+- **Local Path:** `papers/data-juicer/`
+- **Papers:** [Data-Juicer](https://arxiv.org/abs/2309.02033) · [Data-Juicer 2.0](https://arxiv.org/abs/2501.14755) — **SIGMOD 2024 Companion** + **NeurIPS 2025 Spotlight** · [code (Apache-2.0)](https://github.com/datajuicer/data-juicer)
+- **Deliverables:** `README.md` (bilingual 17-section summary) · `deck.pptx` (editable English deck) · `deck-source/` · `sources.md`
+- **Topics Covered:**
+  - The Operator abstraction + YAML recipes; Filter's `compute_stats → bool` split; `text/meta/stats` sample model.
+  - The 1.0 → 2.0 evolution: multimodal token-aligned schema, Ray/MaxCompute facade, runtime Probe (adaptive reordering/batch/GPU).
+  - Verified scale figures (70B samples ≈2.1 h @ 6,400 cores; 5 TB dedup 2.8 h) and the two hard governance gaps (record identity, dataset versioning).
+
+### [Dolma — Three Trillion Tokens as Documents + Attributes](https://wangyong1972.github.io/docs/papers/dolma/)
+- **Local Path:** `papers/dolma/`
+- **Paper:** [Dolma: an Open Corpus of Three Trillion Tokens](https://aclanthology.org/2024.acl-long.840/) — **ACL 2024 Best Resource Paper** · [code](https://github.com/allenai/dolma) · [dataset](https://huggingface.co/datasets/allenai/dolma)
+- **Deliverables:** `README.md` (bilingual) · `deck.pptx` · `deck-source/` · `sources.md`
+- **Topics Covered:**
+  - Documents stored once, attributes as detached span scores, thresholds applied at `dolma mix` via JSONPath.
+  - Exact-key Bloom dedup (URL 53.2% → doc 14.9% → paragraph 18.7%) — *not* MinHash; Rust rayon + Python multiprocessing, no Spark.
+  - Why the "three trillion" ≠ "trained-on" (3,059B full vs 1,715B actually trained in v1.7), and the signal-preserving lifecycle.
+
+### [DataComp-LM — Fix the Model, Change Only the Data](https://wangyong1972.github.io/docs/papers/datacomp-lm/)
+- **Local Path:** `papers/datacomp-lm/`
+- **Paper:** [DataComp-LM: In Search of the Next Generation of Training Sets](https://arxiv.org/abs/2406.11794) — **NeurIPS 2024 Datasets & Benchmarks** · [code (MIT)](https://github.com/mlfoundations/dclm) · [leaderboard](https://datacomp.ai/dclm/)
+- **Deliverables:** `README.md` (bilingual) · `deck.pptx` · `deck-source/` · `sources.md`
+- **Topics Covered:**
+  - The DCLM-Pool (240T tokens, CC 2013–2022), two tracks (filter + mixing), fixed OpenLM training, 53-task evaluation.
+  - DCLM-Baseline (7B/2.6T: Core 57.1 / MMLU 63.7 / Ext 45.4), 416 logged experiments, and measured rank transfer r = 0.838/0.956/0.982.
+  - Benchmark infrastructure vs reusable production infrastructure, and the careful versioning of the evaluation metric (v1/v2).
+
+---
+
 ## 💻 Running Locally
 
 You can open the presentation directly in any browser:

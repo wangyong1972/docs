@@ -1,0 +1,10 @@
+# Dependencies
+node_modules
+
+# Slidev's default build output dir. The build we ship lives in ./build/
+# so that the GitHub Pages base path can match the published URL.
+dist
+
+# Export artifacts: this deck intentionally ships its exported PDF.
+*.pdf
+!slides-export.pdf

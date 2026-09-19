@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniTable — Logical Unification, Physical Separation</title>
+  <style>
+    /* =========================================================
+       Theme tokens — both light & dark are fully built.
+       Switch via ⚙ panel (sets data-theme on <html>).
+       ========================================================= */
+    :root {
+      --canvas-w: 1400px;
+      --canvas-h: 900px;
+      --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+      --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+      --font-mono: "SF Mono", Menlo, Consolas, monospace;
+      --transition: 280ms cubic-bezier(.4,.0,.2,1);
+    }
+    [data-theme="dark"] {
+      --bg: #0b0b0d;
+      --bg-elev: #16161a;
+      --bg-card: #1d1d22;
+      --fg: #e6e6ea;
+      --fg-dim: #9a9aa3;
+      --accent: #6aa9ff;
+      --border: #2a2a31;
+      --code-bg: #0f0f12;
+    }
+    [data-theme="light"] {
+      --bg: #fafafa;
+      --bg-elev: #ffffff;
+      --bg-card: #ffffff;
+      --fg: #1a1a1f;
+      --fg-dim: #6b6b75;
+      --accent: #2a6df4;
+      --border: #e3e3e8;
+      --code-bg: #f3f3f6;
+    }
+
+    /* =========================================================
+       Base layout
+       ========================================================= */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-ui);
+      overflow: hidden;
+      height: 100vh;
+    }
+    body { display: flex; }
+
+    /* =========================================================
+       Outline sidebar (left, derived from DOM)
+       ========================================================= */
+    #outline {
+      width: 280px;
+      flex: 0 0 280px;
+      background: var(--bg-elev);
+      border-right: 1px solid var(--border);
+      padding: 24px 16px;
+      overflow-y: auto;
+      font-size: 13px;
+    }
+    #outline h3 {
+      font-family: var(--font-display);
+      font-size: 11px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--fg-dim);
+      margin: 0 8px 12px;
+    }
+    #outline .section-group { margin-bottom: 14px; }
+    #outline .section-name {
+      font-weight: 600;
+      color: var(--fg);
+      padding: 6px 8px;
+      font-size: 12px;
+      letter-spacing: .04em;
+    }
+    #outline ol { list-style: none; margin: 0; padding: 0; }
+    #outline li {
+      padding: 4px 8px 4px 24px;
+      color: var(--fg-dim);
+      cursor: pointer;
+      border-radius: 4px;
+      line-height: 1.4;
+    }
+    #outline li:hover { background: var(--bg-card); color: var(--fg); }
+    #outline li.active { color: var(--accent); background: var(--bg-card); }
+
+    /* =========================================================
+       Stage (right, hosts the 1400×900 canvas)
+       ========================================================= */
+    #stage-wrap {
+      flex: 1 1 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      min-width: 0;
+      height: 100vh;
+      overflow: hidden;
+      background: var(--bg);
+    }
+    #stage {
+      position: relative;
+      width: var(--canvas-w);
+      height: var(--canvas-h);
+      background: var(--bg-elev);
+      box-shadow: 0 8px 30px rgba(0,0,0,.25);
+      overflow: hidden;
+      transform-origin: center center;
+      transition: transform 100ms ease-out;
+      flex-shrink: 0;
+    }
+
+    /* =========================================================
+       Slides
+       ========================================================= */
+    .slide {
+      position: absolute; inset: 0;
+      padding: 80px 90px;
+      display: none;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 28px;
+    }
+    .slide.active { display: flex; }
+    .slide h1 {
+      font-family: var(--font-display);
+      font-size: 56px;
+      line-height: 1.15;
+      margin: 0;
+      letter-spacing: -.01em;
+    }
+    .slide h2 {
+      font-family: var(--font-display);
+      font-size: 36px;
+      line-height: 1.2;
+      margin: 0;
+      letter-spacing: -.005em;
+    }
+    .slide h3 {
+      font-family: var(--font-display);
+      font-size: 22px;
+      margin: 0 0 6px;
+      color: var(--fg-dim);
+    }
+    .slide p { font-size: 22px; line-height: 1.55; margin: 0; }
+    .slide ul, .slide ol { font-size: 22px; line-height: 1.7; margin: 0; padding-left: 28px; }
+    .slide li { margin-bottom: 6px; }
+    .slide .lede { font-size: 28px; color: var(--fg-dim); }
+    .slide .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 28px;
+    }
+    .slide pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px 24px;
+      font-family: var(--font-mono);
+      font-size: 16px;
+      line-height: 1.5;
+      overflow: auto;
+      max-height: 100%;
+    }
+    .slide code { font-family: var(--font-mono); }
+    .slide .pill {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      font-size: 14px;
+      color: var(--fg-dim);
+      margin-right: 8px;
+    }
+    .slide .cols-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+    .slide .cols-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+
+    /* =========================================================
+       Toolbar (top-right of stage)
+       ========================================================= */
+    #toolbar {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: flex;
+      gap: 6px;
+      z-index: 10;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 4px;
+    }
+    #toolbar button {
+      background: transparent;
+      border: 0;
+      color: var(--fg);
+      width: 34px; height: 34px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #toolbar button:hover { background: var(--bg-elev); }
+    #toolbar button.active { background: var(--accent); color: white; }
+
+    /* =========================================================
+       Status bar (bottom-right, slide counter + progress)
+       ========================================================= */
+    #statusbar {
+      position: absolute;
+      bottom: 16px; right: 24px;
+      font-size: 13px;
+      color: var(--fg-dim);
+      font-family: var(--font-mono);
+      z-index: 5;
+    }
+    #progress {
+      position: absolute;
+      bottom: 0; left: 0;
+      height: 3px;
+      background: var(--accent);
+      transition: width var(--transition);
+    }
+
+    /* =========================================================
+       Laser pointer (hidden until toggled)
+       ========================================================= */
+    #laser {
+      position: fixed;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: #ff3b30;
+      box-shadow: 0 0 10px rgba(255,59,48,.8);
+      pointer-events: none;
+      display: none;
+      z-index: 1000;
+      transform: translate(-50%, -50%);
+    }
+
+    /* =========================================================
+       Settings modal
+       ========================================================= */
+    #settings-modal {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+    #settings-modal.open { display: flex; }
+    #settings-modal .panel {
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px 32px;
+      width: 420px;
+    }
+    #settings-modal h2 {
+      margin: 0 0 20px;
+      font-family: var(--font-display);
+      font-size: 20px;
+    }
+    #settings-modal label {
+      display: block;
+      margin: 14px 0 4px;
+      font-size: 13px;
+      color: var(--fg-dim);
+    }
+    #settings-modal select {
+      width: 100%;
+      padding: 8px 10px;
+      background: var(--bg-card);
+      color: var(--fg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    /* =========================================================
+       Print (PDF export) — one slide per page, hide chrome
+       ========================================================= */
+    @media print {
+      body { overflow: visible; height: auto; }
+      #outline, #toolbar, #statusbar, #progress, #laser, #settings-modal { display: none !important; }
+      #stage-wrap { display: block; }
+      #stage {
+        transform: none !important;
+        box-shadow: none;
+        page-break-after: always;
+        break-after: page;
+      }
+      .slide { display: flex !important; position: relative; inset: auto; }
+    }
+
+    /* -----------------------------------------------------------------
+       The base template only breaks AFTER #stage, and #stage keeps its
+       900px height + overflow:hidden in print — so a 26-slide deck prints
+       as ONE clipped page. These overrides give each slide its own page.
+       (Deck-local fix; the skill's shared template is left untouched.)
+       ----------------------------------------------------------------- */
+    @media print {
+      @page { size: 1400px 900px; margin: 0; }
+      html, body { height: auto !important; overflow: visible !important; display: block !important; }
+      #stage-wrap {
+        display: block !important;
+        height: auto !important;
+        overflow: visible !important;
+        align-items: initial !important;
+        justify-content: initial !important;
+      }
+      #stage {
+        width: auto !important;
+        height: auto !important;
+        overflow: visible !important;
+        box-shadow: none !important;
+        page-break-after: auto !important;
+        break-after: auto !important;
+      }
+      .slide {
+        width: 1400px;
+        height: 900px;
+        box-sizing: border-box;
+        page-break-after: always !important;
+        break-after: page !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+      .slide:last-of-type { page-break-after: auto !important; break-after: auto !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- =================== Outline sidebar =================== -->
+  <nav id="outline" aria-label="Outline">
+    <h3>Outline</h3>
+    <div id="outline-tree"><!-- derived from DOM by JS --></div>
+  </nav>
+
+  <!-- =================== Stage =================== -->
+  <div id="stage-wrap">
+    <div id="stage">
+
+      <!-- Toolbar -->
+      <div id="toolbar">
+        <button id="btn-outline" title="Toggle outline (o)">☰</button>
+        <button id="btn-laser" title="Laser pointer (l)">●</button>
+        <button id="btn-fullscreen" title="Fullscreen (f)">⛶</button>
+        <button id="btn-pdf" title="Export PDF (p)">📄</button>
+        <button id="btn-settings" title="Settings (s)">⚙</button>
+      </div>
+
+      <!-- Status + progress -->
+      <div id="statusbar"><span id="slideCounter">1 / 1</span></div>
+      <div id="progress" style="width: 0%"></div>
+
+      <!-- ============================================================
+           SLIDES — replace these blocks with your own content.
+           Each <section> must carry: data-deck data-section data-title.
+           ============================================================ -->
+      <section class="slide active" data-deck="v1" data-section="Why" data-title="Cover">
+        <h3>arXiv 2609.11148 &middot; PVLDB 2026 &middot; <strong>Best Industry Paper</strong></h3>
+        <h1>OmniTable</h1>
+        <p class="lede">A unified wide table for petabyte-scale LLM data curation &mdash; and what it says about
+        separating <em>logical structure</em> from <em>physical layout</em> in a data lake.</p>
+        <div>
+          <span class="pill">logical unification</span>
+          <span class="pill">physical separation</span>
+          <span class="pill">wide table as virtual view</span>
+          <span class="pill">Catalog-driven</span>
+        </div>
+      </section>
+
+      <section class="slide" data-deck="v1" data-section="Why" data-title="The paper">
+        <h2>The paper</h2>
+        <ul>
+          <li><strong>19 authors, all at Ant Group</strong> &mdash; corresponding author Jun Zhou</li>
+          <li>PVLDB Vol.&nbsp;19, No.&nbsp;12, pp.&nbsp;4276&ndash;4289, 2026 &middot; doi 10.14778/3827998.3828032</li>
+          <li><strong>VLDB 2026 Best Industry Paper</strong> (per the arXiv comment field)</li>
+          <li>Self-described <strong>&ldquo;architecture blueprint&rdquo;</strong> &mdash; design and production measurements, not a new algorithm</li>
+          <li>Runs in production on <strong>35&nbsp;PB</strong>, 305B+ records, 392+ batches, 16 physical tables</li>
+          <li>Headline: curation cycle <strong>14 days &rarr; 2.5 days (5.6&times;)</strong>, manual steps &minus;73%</li>
+        </ul>
+      </section>
+
+      <section class="slide" data-deck="v1" data-section="Why" data-title="Where lakehouse stops">
+        <h2>Where lakehouse formats stop</h2>
+        <ul>
+          <li>Delta Lake / Iceberg / Paimon already give you ACID, time travel and schema evolution on object storage.</li>
+          <li>They remain <strong>table-centric</strong>: the table is simultaneously the logical unit and the physical unit.</li>
+          <li>Two things they do not treat as first-class lifecycle objects:
+            <ul>
+              <li>a <strong>column / UDF dependency DAG</strong></li>
+              <li><strong>operator-aware CPU/GPU routing</strong></li>
+            </ul>
+          </li>
+          <li>In LLM curation the unit of iteration is a <strong>feature</strong>, not a table &mdash; columns are computed by UDF DAGs, not appended as rows.</li>
+        </ul>
+        <p class="lede">OmniTable positions itself as a reusable layer <em>above</em> storage, not a replacement for it.</p>
+      </section>
+
+      <section class="slide" data-deck="v1" data-section="Why" data-title="The pipeline maze">
+        <h2>The pipeline maze</h2>
+        <div class="cols-3">
+          <div class="card">
+            <h3>Data silos</h3>
+            <p>Dozens of sources scattered over <strong>hundreds of physical tables</strong>. Cross-dataset discovery is the hard part.</p>
+          </div>
+          <div class="card">
+            <h3>Costly features</h3>
+            <p>For a <em>single</em> feature, an engineer had to <strong>&ldquo;drag and drop 106 tables onto the task canvas.&rdquo;</strong></p>
+          </div>
+          <div class="card">
+            <h3>Broken lineage</h3>
+            <p>UDF logic spread across codebases, no centralized version control. Definitions drift; iterations can't be traced.</p>
+          </div>
+        </div>
+        <p class="lede">The iteration unit is a <em>table</em>, so cost scales with the number of datasets &mdash; the exact opposite of what ablation-driven research needs.</p>
+      </section>
+
+      <section class="slide" data-deck="v1" data-section="Why" data-title="Four contributions">
+        <h2>Four contributions</h2>
+        <ol>
+          <li><strong>Unified wide-table abstraction</strong> &mdash; multi-source data and thousands of derived features under one logical schema, via logical&ndash;physical mapping.</li>
+          <li><strong>Declarative feature lifecycle</strong> &mdash; dependency resolution, execution planning, operator fusion and lineage; <em>&ldquo;declare-and-execute&rdquo;</em> replaces manual orchestration.</li>
+          <li><strong>Adaptive execution + autonomous governance</strong> &mdash; CPU/GPU routing, adaptive tuning, UDF-level fault tolerance, background storage-layout optimization.</li>
+          <li><strong>Hybrid-accelerated exploration</strong> &mdash; global ID index, transparent OLAP offload, background materialized views.</li>
+        </ol>
+      </section>
+
+      <section class="slide" data-deck="v1" data-section="Why" data-title="The one idea">
+        <h3>the whole design, in five lines</h3>
+        <h1>Logical Unification, Physical Separation</h1>
+        <ul>
+          <li>Users see <strong>one</strong> wide table. The system stores <strong>many</strong>.</li>
+          <li>The logical schema is a <strong>contract, not a constraint</strong>.</li>
+          <li>A <strong>Catalog</strong> owns the mapping and is the single consistency decision point.</li>
+        </ul>
+        <p class="lede">Cost: ~8&ndash;15% extra storage for hot column groups. Payoff: 5.6&times; end-to-end, &minus;73% manual steps.</p>
+      </section>
+
+      <section class="slide" data-deck="v1" data-section="The Abstraction" data-title="The virtual view">
+        <h2>The wide table is a virtual view</h2>
+        <div class="cols-3">
+          <div class="card">
+            <h3>What users see</h3>
+            <p><strong>1 logical table.</strong><br>Unified schema, 800+ columns, plain SQL. No physical layout visible.</p>
+          </div>
+          <div class="card" style="border-left:4px solid var(--accent);">
+            <h3>The Catalog</h3>
+            <p><strong>The only thing in the middle.</strong><br>Owns logical&rarr;physical mappings, versions, batch registry.</p>
+          </div>
+          <div class="card">
+            <h3>What exists</h3>
+            <p><strong>4&ndash;6 physical tables</strong> (a <em>Table Family</em>): different column subsets, batch-organized, engine-specific.</p>
+          </div>
+        </div>
+        <ul>
+          <li>The logical table has <strong>no physical existence</strong> &mdash; it is resolved per query.</li>
+          <li>Nobody writes to it: ingestion adds <em>rows</em>, backfill adds <em>columns</em>, both into physical tables.</li>
+        </ul>
+      </section>
+
+      <section class="slide" data-deck="v1" data-section="The Abstraction" data-title="The logical schema">
+        <h2>The logical schema</h2>
+        <pre><code>CREATE TABLE OmniTable (
+  _ai_unique_id_   STRING NOT NULL,  -- global primary key &amp; lineage anchor
+  _ai_append_name_ STRING NOT NULL,  -- ingestion batch / source tag
+
+  RawData          STRUCT&lt;...&gt;,      -- stage-aware core column groups
+  ProcessedData    STRUCT&lt;...&gt;,
+  TrainableData    STRUCT&lt;...&gt;,
+
+  Feature_1 &lt;Type1&gt;, ... Feature_N &lt;TypeN&gt;   -- unbounded feature columns
+);</code></pre>
+        <p class="lede">Illustrative (paper's Listing&nbsp;1). This is a <strong>logical contract</strong> &mdash; there is no physical
+        <code>CREATE TABLE</code> behind it. The Catalog maintains the mapping that makes it real.</p>
+      </section>
+
+      <section class="slide" data-deck="v1" data-section="The Abstraction" data-title="Four design principles">
+        <h2>Four principles of the logical model</h2>
+        <ul>
+          <li><strong>Global primary key alignment</strong> &mdash; one key aligns rows across sources, stages and features, enabling backfill joins, point lookups and lineage auditing.</li>
+          <li><strong>Stage-aware data evolution</strong> &mdash; RawData / ProcessedData / TrainableData, with optional version suffixes (<code>ProcessedData_v2</code>) so processing iterations become versioned columns.</li>
+          <li><strong>Unbounded feature column expansion</strong> &mdash; quality scores, domain labels, compliance flags, dedup signatures &mdash; registered, versioned and refreshed as columns.</li>
+          <li><strong>Batch-level governance</strong> &mdash; the batch is the basic unit for auditing, task splitting and query pruning.</li>
+        </ul>
+      </section>
+
+      <section class="slide" data-deck="v1" data-section="The Abstraction" data-title="Three structural columns">
+        <h2>Three columns that carry the design</h2>
+        <div class="cols-3">
+          <div class="card">
+            <h3>_ai_unique_id_</h3>
+            <p>Global PK. Default is <strong>MD5 of <code>raw_data</code></strong> &mdash; a deterministic content hash, so dedup is free and needs no coordination. Random UUID when content dedup is unwanted (SFT).</p>
+          </div>
+          <div class="card">
+            <h3>_ai_append_name_</h3>
+            <p>Batch + source + version. One tag doing three jobs: <strong>backfill scheduling granularity</strong>, <strong>query pruning key</strong>, <strong>audit trail</strong>.</p>
+          </div>
+          <div class="card">
+            <h3>The stage groups</h3>
+            <p><code>RawData</code> &rarr; <code>ProcessedData</code> &rarr; <code>TrainableData</code>: original payload, cleaned intermediate form, trainable form.</p>
+          </div>
+        </div>
+        <p class="lede">Because the key is a content hash, identical content from different sources <em>collapses into one row</em>. That is intentional &mdash; but it is a semantic choice about provenance, not a storage detail.</p>
+      </section>
+
+      <section class="slide" data-deck="v1" data-section="The Abstraction" data-title="Table Family">
+        <h2>The Table Family &mdash; five layers, one boundary</h2>
+        <div class="cols-2">
+          <div class="card">
+            <h3>Logical side (semantics)</h3>
+            <ul>
+              <li><code>LogicalTable</code> &mdash; the user-facing wide table, e.g. <code>aidata://tables/web</code></li>
+              <li><code>LogicalColumn</code> &mdash; name, type, <strong>analysis type</strong>, comments</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Physical side (layout)</h3>
+            <ul>
+              <li><code>PhysicalTableGroup</code> &mdash; groups tables by function or batch; <strong>this is the lock granularity</strong></li>
+              <li><code>PhysicalTable</code> &mdash; on MaxCompute or OSS: path, partitions, file format</li>
+              <li><code>PhysicalColumn</code></li>
+            </ul>
+          </div>
+        </div>
+        <p class="lede">The boundary is exactly <strong>one layer of indirection</strong>: <code>LogicalColumn</code> &harr; <code>PhysicalColumn</code>, held by <strong>bidirectional references</strong> in the Catalog.
+        Everything above is semantics; everything below is layout.</p>
+      </section>
+
+      <section class="slide" data-deck="v1" data-section="The Abstraction" data-title="The mapping entry">
+        <h2>What a mapping entry carries</h2>
+        <pre><code>LogicalColumn: quality_score   (type: double, analysisType: score)
+
+   physical location  ->  PhysicalTable: web_main      (engine, path, partitions, format)
+   version            ->  feature version, not schema version
+   updated_at         ->  timestamp
+
+   ...and the reverse reference, so a PhysicalColumn knows which
+      LogicalColumn it serves.</code></pre>
+        <ul>
+          <li><strong>Version + timestamp on every entry</strong> &rarr; historical backtracking is free.</li>
+          <li>Metadata lives in a <strong>relational DB with optimistic locking</strong> for concurrent updates.</li>
+          <li>Production metadata query latency stays at the <strong>millisecond level</strong> &mdash; the indirection is cheap on the read path.</li>
+        </ul>
+      </section>
+
+      <section class="slide" data-deck="v1" data-section="The Abstraction" data-title="Batch metadata">
+        <h2>The batch dimension</h2>
+        <p>Every ingestion atomically registers an <strong>Append entry</strong> in the Catalog:</p>
+        <pre><code>Append {
+  _ai_append_name_:  "cc"          // batch name
+  physicalTables:    [web_main, web_colshard_2, ...]
+  rowCount:          ...
+  ingestedAt:        ...
+  source:            ...
+}</code></pre>
+        <ul>
+          <li><code>WHERE _ai_append_name_ = &#39;cc&#39;</code> lets the optimizer <strong>locate the exact physical table subset</strong> and skip everything else &mdash; I/O reduction with no data movement.</li>
+          <li>The same identifier is the scheduling unit for incremental backfill and the unit for audit backtracking.</li>
+        </ul>
+      </section>
+
+      <section class="slide" data-deck="v1" data-section="Virtual View in Practice" data-title="Resolving a query">
+        <h2>Resolving a query against a table that doesn't exist</h2>
+        <ul>
+          <li>Logical columns may live in <strong>different physical tables</strong> (because of column splitting, or batch organization).</li>
+          <li>So translation is <strong>not a table-name substitution</strong>. It is multi-step reasoning:</li>
+        </ul>
+        <ol>
+          <li>Parse the SQL, extract referenced columns and predicates.</li>
+          <li>Ask the Catalog for <strong>each column's physical location</strong>.</li>
+          <li>Build a plan &mdash; typically a <strong>multi-table JOIN on <code>_ai_unique_id_</code></strong> with <strong>UNION ALL across batches</strong>.</li>
+          <li>Apply rewrites: predicate pushdown, column pruning, batch pruning.</li>
+          <li>Try to match an acceleration path: ID index / OLAP offload / materialized view.</li>
+        </ol>
+      </section>
+
+      <section class="slide" data-deck="v1" data-section="Virtual View in Practice" data-title="The rewrite">
+        <h2>The rewrite, concretely</h2>
+        <pre><code>-- what you write: one logical table
+SELECT _ai_unique_id_, quality_score, math_recall
+FROM   aidata://tables/web
+WHERE  _ai_append_name_ IN (&#39;cc&#39;,&#39;cc2&#39;) AND quality_score &gt; 0.7;
+
+-- what the optimizer builds: JOIN on the global key, UNION ALL across batches
+SELECT a._ai_unique_id_, a.quality_score, b.math_recall
+FROM  ( SELECT * FROM main_cc  WHERE quality_score &gt; 0.7
+        UNION ALL
+        SELECT * FROM main_cc2 WHERE quality_score &gt; 0.7 ) a
+JOIN  ( SELECT _ai_unique_id_, math_recall FROM colshard_2 ) b
+  ON    a._ai_unique_id_ = b._ai_unique_id_;</code></pre>
+        <p class="lede">Illustrative reconstruction &mdash; the paper describes this rewrite but does not print the SQL.
+        <strong>Column pruning</strong> is what stops the large <code>raw_data</code> column from ever being read.</p>
+      </section>
+
+      <section class="slide" data-deck="v1" data-section="Virtual View in Practice" data-title="Column splitting">
+        <h2>Column splitting: crossing the engine's width wall</h2>
+        <ul>
+          <li>The web wide table has <strong>800+ logical columns</strong> &mdash; but MaxCompute imposes a <strong>~1200-column</strong> physical limit.</li>
+          <li>The governance service groups columns by <strong>access frequency from query logs</strong>.</li>
+          <li>Low-frequency feature columns migrate to auxiliary tables (<strong>Column Shards</strong>) containing only <code>_ai_unique_id_</code> plus the migrated columns.</li>
+          <li>The main table keeps high-frequency and core columns.</li>
+        </ul>
+        <p class="lede">In production: <strong>800+ logical columns distributed across 4&ndash;6 physical tables of 200&ndash;300 columns each.</strong>
+        Queries touching only high-frequency columns need <em>no JOIN at all</em>.</p>
+      </section>
+
+      <section class="slide" data-deck="v1" data-section="Virtual View in Practice" data-title="Splitting, in the Catalog">
+        <h2>What column splitting actually changes</h2>
+        <pre><code>BEFORE   one physical table is close to the ~1200-column engine limit
+
+  [all 800+ LogicalColumns]  --&gt;  PhysicalTable: web_main
+
+AFTER    only mapping pointers change; the logical DDL is untouched
+
+  quality_score      (hot)  --&gt;  PhysicalTable: web_main
+  lang_detect        (hot)  --&gt;  PhysicalTable: web_main
+  math_recall_v4     (cold) --&gt;  PhysicalTable: web_colshard_2   [id + col]
+  boilerplate_flag   (cold) --&gt;  PhysicalTable: web_colshard_3   [id + col]</code></pre>
+        <p class="lede">Physical table names are illustrative. The load-bearing claim: <strong>no logical schema change, no consumer change</strong> &mdash;
+        the optimizer simply reads the latest mapping. Row splitting and small-partition merges work the same way.</p>
+      </section>
+
+      <section class="slide" data-deck="v1" data-section="Virtual View in Practice" data-title="The invariant">
+        <h2>The invariant that makes it work</h2>
+        <div class="card" style="border-left:4px solid var(--accent);">
+          <p style="font-size:28px; font-style:italic;">Logical view stability is decoupled from physical layout evolvability.</p>
+        </div>
+        <ul>
+          <li>Frontend services <strong>read</strong> mappings to build plans. Backend services <strong>write</strong> optimization results back.</li>
+          <li>Neither knows about the other. The Catalog is the only meeting point.</li>
+          <li>Physical changes are <strong>fully transparent</strong> because the optimizer always fetches the current mapping.</li>
+          <li>Consequence: the system can reorganize storage <em>forever</em> without anyone's SQL changing.</li>
+        </ul>
+      </section>
+
+      <section class="slide" data-deck="v1" data-section="Keeping It Consistent" data-title="Why a commit protocol">
+        <h2>A virtual view needs a commit protocol</h2>
+        <ul>
+          <li>Continuous writes at PB/day plus growing column counts inevitably degrade: small files, column limits, partition skew.</li>
+          <li>So the system continuously <strong>rewrites physical layout in the background</strong> &mdash; while queries and ingestion keep running.</li>
+          <li>That means a reader can be mid-query when its physical tables are being split or merged.</li>
+          <li>The answer is not locking readers. It is <strong>making layout changes invisible until an atomic commit</strong>.</li>
+        </ul>
+      </section>
+
+      <section class="slide" data-deck="v1" data-section="Keeping It Consistent" data-title="Prepare-Execute-Commit">
+        <h2>Prepare &ndash; Execute &ndash; Commit</h2>
+        <div class="cols-3">
+          <div class="card">
+            <h3>Prepare</h3>
+            <p>Acquire an exclusive lock at <strong>PhysicalTableGroup</strong> granularity. If a frontend write holds the target, the optimization is simply <strong>postponed</strong>.</p>
+          </div>
+          <div class="card">
+            <h3>Execute</h3>
+            <p>Write the reorganized data to a <strong>staging area</strong>. Existing files are never modified in place.</p>
+          </div>
+          <div class="card">
+            <h3>Commit</h3>
+            <p><strong>Atomically</strong> register new files, update mappings, mark old files for reclamation. Failure &rarr; metadata rollback + staging cleanup.</p>
+          </div>
+        </div>
+        <p class="lede">The new layout becomes visible <strong>only after a successful commit</strong>. Subsequent queries then benefit automatically &mdash; with no coordination.</p>
+      </section>
+
+      <section class="slide" data-deck="v1" data-section="Keeping It Consistent" data-title="Read consistency">
+        <h2>Reads don't lock &mdash; they snapshot</h2>
+        <ul>
+          <li>Frontend reads <strong>do not take exclusive locks</strong>.</li>
+          <li>Instead they take a <strong>consistent metadata snapshot at query start</strong>.</li>
+          <li>In-flight queries are therefore unaffected by concurrent background reorganization.</li>
+          <li>The lock is only needed where writes collide &mdash; at <code>PhysicalTableGroup</code> granularity, which is coarse enough to be rare and fine enough to be parallel.</li>
+        </ul>
+        <p class="lede">This is the piece that lets a virtual view be rewritten underneath live traffic: snapshot isolation on <em>metadata</em>, staged writes on <em>data</em>, atomic pointer swap to publish.</p>
+      </section>
+
+      <section class="slide" data-deck="v1" data-section="Evidence" data-title="Production assets">
+        <h2>What it runs on</h2>
+        <ul>
+          <li><strong>web</strong> &mdash; 300B+ records, 25&nbsp;PB, 800+ logical columns, <strong>6 physical tables</strong>, 200+ batches, 13 sources</li>
+          <li><strong>code</strong> &mdash; 3.4B / 3.8&nbsp;PB / 350 columns / 4 tables / 85 batches</li>
+          <li><strong>pdf</strong> &mdash; 1.8B / 5.2&nbsp;PB / 280 columns / 3 tables / 62 batches</li>
+          <li><strong>post_sft</strong> &mdash; 210M / 0.8&nbsp;PB / 120 columns / 3 tables / 45 batches</li>
+          <li><strong>Total 305B+ records, 35&nbsp;PB, 16 physical tables, 392+ batches</strong></li>
+        </ul>
+        <p class="lede">Storage is Parquet on OSS plus a MaxCompute warehouse; Catalog on MySQL, index on HBase, OLAP on ClickHouse. A real production deployment, not a testbed.</p>
+      </section>
+
+      <section class="slide" data-deck="v1" data-section="Evidence" data-title="Scalability">
+        <h2>The two curves that validate the separation</h2>
+        <div class="cols-2">
+          <div class="card">
+            <h3>Data volume: 1&nbsp;TB &rarr; 25&nbsp;PB</h3>
+            <ul>
+              <li><strong>OmniTable:</strong> stable <strong>18&ndash;23&nbsp;TB/h</strong></li>
+              <li>No governance: ~10&nbsp;TB/h at 5&nbsp;PB, ~5&nbsp;TB/h at 25&nbsp;PB</li>
+              <li>Legacy: ~2&nbsp;TB/h at 25&nbsp;PB (<strong>9.5&times; slower</strong>)</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Schema width: 200 &rarr; 2500 columns</h3>
+            <ul>
+              <li><strong>OmniTable:</strong> P95 <strong>25&nbsp;s &rarr; 38&nbsp;s (1.53&times;)</strong></li>
+              <li>No governance: 110&nbsp;s at 1500 columns (~3&times;)</li>
+              <li>Beyond 1200 columns, the ablation's queries <strong>fail outright</strong></li>
+            </ul>
+          </div>
+        </div>
+        <p class="lede">The width result is the key one for a data lake: <strong>it crosses a hard engine limit with no performance discontinuity</strong> &mdash;
+        because crossing it is a mapping update, not a table redesign.</p>
+      </section>
+
+      <section class="slide" data-deck="v1" data-section="Assessment" data-title="What to take">
+        <h2>What to take</h2>
+        <ul>
+          <li><strong>One layer of indirection is the entire design.</strong> A single <code>LogicalColumn &harr; PhysicalColumn</code> boundary, owned by one service, buys both schema evolution and layout freedom.</li>
+          <li><strong>Treat engine limits as architecture constraints, not user problems.</strong> 1200 columns is a physical fact; it should never reach the person writing SQL.</li>
+          <li><strong>Make the batch a first-class dimension.</strong> One identifier serving scheduling, pruning and audit is unusually good design economy.</li>
+          <li><strong>Give the virtual view a commit protocol.</strong> Stage writes, snapshot reads, atomic publish.</li>
+          <li><strong>Adoption beats capability.</strong> The logical table speaks plain SQL and lineage records are queryable tables &mdash; value first, new workflow second.</li>
+        </ul>
+      </section>
+
+      <section class="slide" data-deck="v1" data-section="Assessment" data-title="What to discount">
+        <h2>What to discount</h2>
+        <ul>
+          <li><strong>5.6&times; is workflow-level, not system-level.</strong> The baseline is historical task logs measuring coordination cost (locate tables, wire pipelines, diagnose, resubmit). It is explicitly orthogonal to compute-level optimization &mdash; do not read it as a throughput comparison against another engine.</li>
+          <li><strong>No public benchmark and no head-to-head system comparison.</strong> The authors' reason (settings too different for a shared benchmark) is fair, but the numbers are not independently reproducible.</li>
+          <li><strong>&ldquo;Second-level point lookups&rdquo; are 5&ndash;15&nbsp;s (P50 8.3&nbsp;s)</strong> &mdash; an index-assisted partial scan plus multi-table column assembly, not a point read.</li>
+          <li><strong>Key hyperparameters are missing</strong> &mdash; materialization thresholds and the column-split access-frequency cutoff are only ever &ldquo;exceeds a threshold.&rdquo;</li>
+        </ul>
+      </section>
+
+      <section class="slide" data-deck="v1" data-section="Assessment" data-title="Takeaways">
+        <h2>Takeaways for our own lake</h2>
+        <ul>
+          <li>If logical and physical are the same object today, <strong>a single mapping layer is the cheapest first step</strong> &mdash; you get schema evolution without touching consumers.</li>
+          <li><strong>Budget the indirection.</strong> It cost them ~8&ndash;15% extra storage for hot column groups, and 5&ndash;8% of cluster resources for continuous compaction.</li>
+          <li><strong>Decide the global key up front.</strong> MD5-of-content buys free dedup but collapses provenance &mdash; a semantic decision, not a storage one.</li>
+          <li><strong>Reorganization needs staging + atomic commit + reclamation</strong>, and a lock granularity coarse enough to be rare, fine enough to be parallel.</li>
+        </ul>
+        <p class="lede">Full analysis: <code>my-wiki/05-References/OmniTable 论文总结（中文）.md</code> and the English counterpart.</p>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- =================== Settings modal =================== -->
+  <div id="settings-modal" role="dialog" aria-label="Settings">
+    <div class="panel">
+      <h2>Settings</h2>
+      <label for="theme-select">Theme</label>
+      <select id="theme-select">
+        <option value="dark">Dark</option>
+        <option value="light">Light</option>
+      </select>
+      <label for="font-select">Font</label>
+      <select id="font-select">
+        <option value="SF Pro">SF Pro</option>
+        <option value="Helvetica">Helvetica</option>
+        <option value="Avenir">Avenir</option>
+        <option value="Georgia">Georgia</option>
+        <option value="Menlo">Menlo</option>
+      </select>
+      <label for="transition-select">Transition</label>
+      <select id="transition-select">
+        <option value="fade">Fade</option>
+        <option value="slide-left">Slide left</option>
+        <option value="zoom">Zoom</option>
+        <option value="none">None</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- =================== Laser pointer dot =================== -->
+  <div id="laser"></div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    // ---------- Derived outline ----------
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    const tree = document.getElementById('outline-tree');
+    const sections = {};
+    slides.forEach((s, i) => {
+      const sec = s.dataset.section || '(no section)';
+      if (!sections[sec]) sections[sec] = [];
+      sections[sec].push({ idx: i, title: s.dataset.title || `slide ${i + 1}` });
+    });
+    Object.keys(sections).forEach(secName => {
+      const group = document.createElement('div');
+      group.className = 'section-group';
+      const head = document.createElement('div');
+      head.className = 'section-name';
+      head.textContent = secName;
+      group.appendChild(head);
+      const ol = document.createElement('ol');
+      sections[secName].forEach(({ idx, title }) => {
+        const li = document.createElement('li');
+        li.textContent = `${idx + 1}. ${title}`;
+        li.dataset.idx = idx;
+        li.addEventListener('click', () => goTo(idx));
+        ol.appendChild(li);
+      });
+      group.appendChild(ol);
+      tree.appendChild(group);
+    });
+
+    // ---------- Navigation state ----------
+    let current = parseInt(location.hash.replace('#', ''), 10);
+    if (!Number.isFinite(current) || current < 1 || current > slides.length) current = 1;
+    current = current - 1;
+
+    const counter = document.getElementById('slideCounter');
+    const progress = document.getElementById('progress');
+    const outlineItems = () => document.querySelectorAll('#outline li');
+
+    function render() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+      outlineItems().forEach(li => {
+        li.classList.toggle('active', Number(li.dataset.idx) === current);
+      });
+      location.hash = current + 1;
+    }
+
+    function goTo(i) {
+      if (i < 0 || i >= slides.length) return;
+      current = i;
+      render();
+    }
+
+    function next() { goTo(Math.min(current + 1, slides.length - 1)); }
+    function prev() { goTo(Math.max(current - 1, 0)); }
+
+    // ---------- Keyboard ----------
+    document.addEventListener('keydown', e => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+      switch (e.key) {
+        case 'ArrowRight': case 'PageDown': case ' ': next(); e.preventDefault(); break;
+        case 'ArrowLeft':  case 'PageUp':           prev(); e.preventDefault(); break;
+        case 'Home': goTo(0); break;
+        case 'End':  goTo(slides.length - 1); break;
+        case 'o': case 'O': toggleOutline(); break;
+        case 'l': case 'L': toggleLaser(); break;
+        case 'f': case 'F': toggleFullscreen(); break;
+        case 'p': case 'P': exportPdf(); break;
+        case 's': case 'S': openSettings(); break;
+        case 'Escape':
+          document.getElementById('settings-modal').classList.remove('open');
+          break;
+      }
+    });
+
+    // ---------- Dynamic Responsive Auto-Scaling ----------
+    function updateScale() {
+      const wrap = document.getElementById('stage-wrap');
+      const stage = document.getElementById('stage');
+      if (!wrap || !stage) return;
+      const isFullscreen = !!document.fullscreenElement;
+      const padX = isFullscreen ? 0 : 24;
+      const padY = isFullscreen ? 0 : 24;
+      const availW = Math.max(wrap.clientWidth - padX, 200);
+      const availH = Math.max(wrap.clientHeight - padY, 200);
+      const scale = Math.min(availW / 1400, availH / 900);
+      stage.style.transform = `scale(${scale})`;
+    }
+
+    window.addEventListener('resize', updateScale);
+    document.addEventListener('fullscreenchange', updateScale);
+    if (window.ResizeObserver) {
+      new ResizeObserver(() => updateScale()).observe(document.getElementById('stage-wrap'));
+    }
+
+    // ---------- Toolbar ----------
+    function toggleOutline() {
+      const outline = document.getElementById('outline');
+      outline.style.display = outline.style.display === 'none' ? 'block' : 'none';
+      requestAnimationFrame(updateScale);
+    }
+    document.getElementById('btn-outline').addEventListener('click', toggleOutline);
+    document.getElementById('btn-outline').addEventListener('click', function () {
+      this.classList.toggle('active');
+    });
+
+    // ---------- Laser pointer ----------
+    const laser = document.getElementById('laser');
+    let laserOn = false;
+    function toggleLaser() {
+      laserOn = !laserOn;
+      laser.style.display = laserOn ? 'block' : 'none';
+      document.getElementById('btn-laser').classList.toggle('active', laserOn);
+    }
+    document.addEventListener('mousemove', e => {
+      laser.style.left = e.clientX + 'px';
+      laser.style.top  = e.clientY + 'px';
+    });
+    document.getElementById('btn-laser').addEventListener('click', toggleLaser);
+
+    // ---------- Fullscreen ----------
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    }
+    document.getElementById('btn-fullscreen').addEventListener('click', toggleFullscreen);
+
+    // ---------- PDF export (uses browser print) ----------
+    function exportPdf() {
+      // Show all slides during print, then restore.
+      const wasActive = slides.map(s => s.classList.contains('active'));
+      slides.forEach(s => s.classList.add('active'));
+      const onAfter = () => {
+        slides.forEach((s, i) => s.classList.toggle('active', wasActive[i]));
+        window.removeEventListener('afterprint', onAfter);
+      };
+      window.addEventListener('afterprint', onAfter);
+      window.print();
+    }
+    document.getElementById('btn-pdf').addEventListener('click', exportPdf);
+
+    // ---------- Settings ----------
+    const settingsModal = document.getElementById('settings-modal');
+    function openSettings()  { settingsModal.classList.add('open'); }
+    function closeSettings() { settingsModal.classList.remove('open'); }
+    document.getElementById('btn-settings').addEventListener('click', openSettings);
+    settingsModal.addEventListener('click', e => { if (e.target === settingsModal) closeSettings(); });
+
+    const themeSel = document.getElementById('theme-select');
+    const fontSel  = document.getElementById('font-select');
+    const transSel = document.getElementById('transition-select');
+
+    themeSel.value = document.documentElement.dataset.theme || 'dark';
+    themeSel.addEventListener('change', () => {
+      document.documentElement.dataset.theme = themeSel.value;
+      try { localStorage.setItem('deck-theme', themeSel.value); } catch (_) {}
+    });
+    fontSel.addEventListener('change', () => {
+      document.documentElement.style.setProperty('--font-ui', fontFamilyFor(fontSel.value));
+      document.documentElement.style.setProperty('--font-display', fontFamilyFor(fontSel.value));
+    });
+    transSel.addEventListener('change', () => {
+      const t = transSel.value;
+      const map = {
+        'fade':      '280ms cubic-bezier(.4,.0,.2,1)',
+        'slide-left': '320ms cubic-bezier(.4,.0,.2,1)',
+        'zoom':      '280ms cubic-bezier(.4,.0,.2,1)',
+        'none':      '0ms'
+      };
+      document.documentElement.style.setProperty('--transition', map[t]);
+    });
+    function fontFamilyFor(name) {
+      switch (name) {
+        case 'SF Pro':    return '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif';
+        case 'Helvetica': return '"Helvetica Neue", Helvetica, Arial, sans-serif';
+        case 'Avenir':    return 'Avenir, "Avenir Next", -apple-system, sans-serif';
+        case 'Georgia':   return 'Georgia, "Times New Roman", serif';
+        case 'Menlo':     return '"SF Mono", Menlo, Consolas, monospace';
+        default:          return '-apple-system, BlinkMacSystemFont, sans-serif';
+      }
+    }
+
+    // ---------- Restore prefs ----------
+    try {
+      const savedTheme = localStorage.getItem('deck-theme');
+      if (savedTheme) {
+        document.documentElement.dataset.theme = savedTheme;
+        themeSel.value = savedTheme;
+      }
+    } catch (_) {}
+
+    // ---------- Init ----------
+    render();
+    updateScale();
+  })();
+  </script>
+</body>
+</html>

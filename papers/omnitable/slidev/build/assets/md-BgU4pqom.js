@@ -1,0 +1,11 @@
+import{E as e,Q as t,S as n,_ as r,_t as i,v as a,x as o,yt as s,z as c}from"./modules/shiki-BKheO8qk.js";import{nt as l,rt as u}from"./index-DnFaH5V-.js";import{t as d}from"./slidev/CodeBlockWrapper-DklEjG4p.js";import{t as f}from"./slidev/default-Ds3Y0up4.js";var p={__name:`slides.md__slidev_21`,setup(p){let{$slidev:m,$nav:h,$clicksContext:g,$clicks:_,$page:v,$renderContext:y,$frontmatter:b}=u();return g.setup(),(u,p)=>{let m=d;return c(),a(f,s(e(i(l)(i(b),20))),{default:t(()=>[p[1]||=r(`h1`,null,`What column splitting actually changes`,-1),n(m,{title:``,ranges:[]},{default:t(()=>[...p[0]||=[r(`pre`,{class:`shiki shiki-themes vitesse-dark vitesse-light slidev-code`,style:{"--shiki-dark":`#dbd7caee`,"--shiki-light":`#393a34`,"--shiki-dark-bg":`#121212`,"--shiki-light-bg":`#ffffff`}},[r(`code`,{class:`language-text`},[r(`span`,{class:`line`},[r(`span`,null,`BEFORE   one physical table is close to the ~1200-column engine limit`)]),o(`
+`),r(`span`,{class:`line`},[r(`span`)]),o(`
+`),r(`span`,{class:`line`},[r(`span`,null,`  [all 800+ LogicalColumns]  -->  PhysicalTable: web_main`)]),o(`
+`),r(`span`,{class:`line`},[r(`span`)]),o(`
+`),r(`span`,{class:`line`},[r(`span`)]),o(`
+`),r(`span`,{class:`line`},[r(`span`,null,`AFTER    only mapping pointers change; the logical DDL is untouched`)]),o(`
+`),r(`span`,{class:`line`},[r(`span`)]),o(`
+`),r(`span`,{class:`line`},[r(`span`,null,`  quality_score     (hot)  -->  PhysicalTable: web_main`)]),o(`
+`),r(`span`,{class:`line`},[r(`span`,null,`  lang_detect       (hot)  -->  PhysicalTable: web_main`)]),o(`
+`),r(`span`,{class:`line`},[r(`span`,null,`  math_recall_v4    (cold) -->  PhysicalTable: web_colshard_2   [id + col]`)]),o(`
+`),r(`span`,{class:`line`},[r(`span`,null,`  boilerplate_flag  (cold) -->  PhysicalTable: web_colshard_3   [id + col]`)])])],-1)]]),_:1}),p[2]||=r(`div`,{class:`pt-3 opacity-80 text-sm`},[r(`p`,null,[o(`Physical table names illustrative. The load-bearing claim: `),r(`strong`,null,`no logical schema change, no consumer change`),o(` — the optimizer simply reads the latest mapping. Row splitting and small-partition merges work the same way.`)])],-1)]),_:1},16)}}};export{p as default};

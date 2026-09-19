@@ -136,12 +136,12 @@ function bullets(s, arr, x, y, w, h, size = 13) {
 {
   const s = add('Model-based filtering is the key lever: fastText OH-2.5+ELI5 best, PageRank worst (Table 4, 1B-1x Core).');
   K.contentHeader(s, A, 'Findings', 'Model-based filtering is the biggest lever', 'Core accuracy, 1B-1x (paper Table 4). fastText OH-2.5+ELI5 wins; PageRank is useless.');
-  const labels = ['fastText\nOH-2.5+ELI5', 'top-k\nlogits', 'perplexity', 'AskLLM', 'RefinedWeb\nrepro', 'SemDedup', 'BGE', 'PageRank'];
-  const values = [30.2, 29.2, 29.0, 28.6, 27.5, 27.1, 27.2, 26.1];
+  const labels = ['PageRank', 'BGE', 'SemDedup', 'RefinedWeb\nrepro', 'AskLLM', 'perplexity', 'top-k\nlogits', 'fastText\nOH-2.5+ELI5'];
+  const values = [26.1, 27.2, 27.1, 27.5, 28.6, 29.0, 29.2, 30.2];
   s.addChart(pptx.charts.BAR, [{ name: 'Core (1B-1x)', labels, values }], {
     x: K.M, y: 2.15, w: K.W - 2 * K.M, h: 4.4, barDir: 'bar',
     showTitle: false, showLegend: false, showValue: true, dataLabelPosition: 'outEnd', dataLabelColor: K.h(K.INK), dataLabelFontSize: 10,
-    chartColors: [K.h(A), K.h('8B7DD8'), K.h('A79DE3'), K.h('C3BCEE'), K.h(K.HAIR), K.h(K.HAIR), K.h(K.HAIR), K.h('D8A0A0')],
+    chartColors: [K.h('D8A0A0'), K.h(K.HAIR), K.h(K.HAIR), K.h(K.HAIR), K.h('C3BCEE'), K.h('A79DE3'), K.h('8B7DD8'), K.h(A)],
     catAxisLabelColor: K.h(K.MUTED), catAxisLabelFontSize: 9.5,
     valAxisLabelColor: K.h(K.MUTED), valAxisLabelFontSize: 9,
     valGridLine: { color: K.h(K.HAIR), size: 1 }, catGridLine: { style: 'none' },

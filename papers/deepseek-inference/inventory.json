@@ -1,0 +1,215 @@
+{
+  "retrieved_utc": "2026-10-23",
+  "source": "https://api.github.com/orgs/deepseek-ai/repos?per_page=100",
+  "official_org_repository_count": 45,
+  "note": "Repository creation timestamps are not public release dates. Context inventory, not a full code audit. Model-weight repositories omitted.",
+  "repositories": [
+    {
+      "archived": false,
+      "created_at": "2025-02-13T09:09:21Z",
+      "default_branch": "main",
+      "description": "DeepGEMM: clean and efficient BLAS kernel library on GPU",
+      "html_url": "https://github.com/deepseek-ai/DeepGEMM",
+      "name": "DeepGEMM",
+      "pushed_at": "2026-10-20T05:07:07Z"
+    },
+    {
+      "archived": false,
+      "created_at": "2025-02-17T01:33:04Z",
+      "default_branch": "main",
+      "description": "DeepEP: an efficient expert-parallel communication library",
+      "html_url": "https://github.com/deepseek-ai/DeepEP",
+      "name": "DeepEP",
+      "pushed_at": "2026-10-21T03:50:43Z"
+    },
+    {
+      "archived": false,
+      "created_at": "2025-02-21T02:29:19Z",
+      "default_branch": "main",
+      "description": "Production-tested AI infrastructure tools for efficient AGI development and community-driven innovation",
+      "html_url": "https://github.com/deepseek-ai/open-infra-index",
+      "name": "open-infra-index",
+      "pushed_at": "2025-05-15T02:00:43Z"
+    },
+    {
+      "archived": false,
+      "created_at": "2025-02-21T06:31:27Z",
+      "default_branch": "main",
+      "description": "FlashMLA: Efficient Multi-head Latent Attention Kernels",
+      "html_url": "https://github.com/deepseek-ai/FlashMLA",
+      "name": "FlashMLA",
+      "pushed_at": "2026-10-15T13:47:29Z"
+    },
+    {
+      "archived": false,
+      "created_at": "2025-02-24T09:28:17Z",
+      "default_branch": "main",
+      "description": "A lightweight data processing framework built on DuckDB and 3FS.",
+      "html_url": "https://github.com/deepseek-ai/smallpond",
+      "name": "smallpond",
+      "pushed_at": "2025-03-05T18:23:54Z"
+    },
+    {
+      "archived": false,
+      "created_at": "2025-02-26T07:26:06Z",
+      "default_branch": "main",
+      "description": "Analyze computation-communication overlap in V3/R1.",
+      "html_url": "https://github.com/deepseek-ai/profile-data",
+      "name": "profile-data",
+      "pushed_at": "2025-03-21T02:23:51Z"
+    },
+    {
+      "archived": false,
+      "created_at": "2025-02-26T10:41:00Z",
+      "default_branch": "main",
+      "description": "Expert Parallelism Load Balancer",
+      "html_url": "https://github.com/deepseek-ai/EPLB",
+      "name": "EPLB",
+      "pushed_at": "2025-03-24T09:17:10Z"
+    },
+    {
+      "archived": false,
+      "created_at": "2025-02-26T13:29:57Z",
+      "default_branch": "main",
+      "description": "A bidirectional pipeline parallelism algorithm for computation-communication overlap in DeepSeek V3/R1 training.",
+      "html_url": "https://github.com/deepseek-ai/DualPipe",
+      "name": "DualPipe",
+      "pushed_at": "2026-01-14T06:34:59Z"
+    },
+    {
+      "archived": false,
+      "created_at": "2025-02-27T13:36:53Z",
+      "default_branch": "main",
+      "description": " A high-performance distributed file system designed to address the challenges of AI training and inference workloads. ",
+      "html_url": "https://github.com/deepseek-ai/3FS",
+      "name": "3FS",
+      "pushed_at": "2026-05-07T09:31:54Z"
+    },
+    {
+      "archived": false,
+      "created_at": "2025-11-19T07:02:55Z",
+      "default_branch": "main",
+      "description": "An early research stage expert-parallel load balancer for MoE models based on linear programming.",
+      "html_url": "https://github.com/deepseek-ai/LPLB",
+      "name": "LPLB",
+      "pushed_at": "2025-11-19T07:20:35Z"
+    },
+    {
+      "archived": false,
+      "created_at": "2026-01-12T05:26:50Z",
+      "default_branch": "main",
+      "description": "Conditional Memory via Scalable Lookup: A New Axis of Sparsity for Large Language Models",
+      "html_url": "https://github.com/deepseek-ai/Engram",
+      "name": "Engram",
+      "pushed_at": "2026-01-14T01:13:02Z"
+    },
+    {
+      "archived": false,
+      "created_at": "2026-04-22T05:38:31Z",
+      "default_branch": "main",
+      "description": "A kernel library written in tilelang",
+      "html_url": "https://github.com/deepseek-ai/TileKernels",
+      "name": "TileKernels",
+      "pushed_at": "2026-10-14T05:49:06Z"
+    },
+    {
+      "archived": false,
+      "created_at": "2026-05-28T08:25:37Z",
+      "default_branch": "main",
+      "description": "Clangd for Ascend for Code Lint & Code Completion",
+      "html_url": "https://github.com/deepseek-ai/clangd-ascend",
+      "name": "clangd-ascend",
+      "pushed_at": "2026-09-29T10:27:05Z"
+    },
+    {
+      "archived": false,
+      "created_at": "2026-06-26T12:36:05Z",
+      "default_branch": "main",
+      "description": "DeepSpec: a full-stack codebase for training and evaluating speculative decoding algorithms",
+      "html_url": "https://github.com/deepseek-ai/DeepSpec",
+      "name": "DeepSpec",
+      "pushed_at": "2026-07-09T04:37:14Z"
+    },
+    {
+      "archived": false,
+      "created_at": "2026-08-13T11:56:32Z",
+      "default_branch": "master",
+      "description": "DeepSeek Harness: Everything is a Plugin.",
+      "html_url": "https://github.com/deepseek-ai/deepseek-harness",
+      "name": "deepseek-harness",
+      "pushed_at": "2026-10-17T08:16:09Z"
+    },
+    {
+      "archived": false,
+      "created_at": "2026-09-08T03:57:22Z",
+      "default_branch": "main",
+      "description": "A lightweight library for xPU kernel JIT compilation",
+      "html_url": "https://github.com/deepseek-ai/DeepJIT",
+      "name": "DeepJIT",
+      "pushed_at": "2026-10-19T03:56:42Z"
+    },
+    {
+      "archived": false,
+      "created_at": "2026-09-09T14:38:04Z",
+      "default_branch": "main",
+      "description": "DeepSelect: TopK kernels for DeepSeek Sparse Attention (DSA) and Samplers",
+      "html_url": "https://github.com/deepseek-ai/DeepSelect",
+      "name": "DeepSelect",
+      "pushed_at": "2026-09-30T01:54:54Z"
+    },
+    {
+      "archived": false,
+      "created_at": "2026-09-10T05:36:48Z",
+      "default_branch": "main",
+      "description": null,
+      "html_url": "https://github.com/deepseek-ai/deepseek-recipe",
+      "name": "deepseek-recipe",
+      "pushed_at": "2026-10-19T17:51:18Z"
+    },
+    {
+      "archived": false,
+      "created_at": "2026-09-29T15:49:55Z",
+      "default_branch": "main",
+      "description": "DeepGEMM-Ascend: clean and efficient matrix multiplication kernel library for Huawei Ascend NPUs",
+      "html_url": "https://github.com/deepseek-ai/DeepGEMM-Ascend",
+      "name": "DeepGEMM-Ascend",
+      "pushed_at": "2026-10-14T09:22:37Z"
+    },
+    {
+      "archived": false,
+      "created_at": "2026-09-30T00:44:59Z",
+      "default_branch": "main",
+      "description": "A high-performance communication library for machine learning training and inference on Huawei Ascend NPUs.",
+      "html_url": "https://github.com/deepseek-ai/DeepEP-Ascend",
+      "name": "DeepEP-Ascend",
+      "pushed_at": "2026-09-30T00:53:14Z"
+    },
+    {
+      "archived": false,
+      "created_at": "2026-09-30T06:27:22Z",
+      "default_branch": "master",
+      "description": "An internal component used by DeepSeek Harness",
+      "html_url": "https://github.com/deepseek-ai/dsh-node-addon-require-builtin",
+      "name": "dsh-node-addon-require-builtin",
+      "pushed_at": "2026-10-12T09:19:26Z"
+    },
+    {
+      "archived": false,
+      "created_at": "2026-09-30T06:28:16Z",
+      "default_branch": "master",
+      "description": "An internal component used by DeepSeek Harness",
+      "html_url": "https://github.com/deepseek-ai/dsh-libreoffice-kit",
+      "name": "dsh-libreoffice-kit",
+      "pushed_at": "2026-09-30T07:37:00Z"
+    },
+    {
+      "archived": false,
+      "created_at": "2026-10-16T07:47:23Z",
+      "default_branch": "main",
+      "description": "DeepInfer: High-performance, large-scale inference framework for DeepSeek models",
+      "html_url": "https://github.com/deepseek-ai/DeepInfer",
+      "name": "DeepInfer",
+      "pushed_at": "2026-10-21T04:55:44Z"
+    }
+  ]
+}

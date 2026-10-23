@@ -1,0 +1,1130 @@
+[
+  {
+    "section": "Scope",
+    "title": "DeepSeek DeepInfer: a source-level systems review",
+    "lead": "Released runtime, execution boundaries, and engineering implications",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "DeepInfer snapshot <code>9bd9cf243fc53ef9afbf8f04d391d989117d6ab9</code>",
+          "Reviewed 23 October 2026 for AI and data infrastructure engineering leaders",
+          "Companion repositories provide context. Most slides trace inference implementation."
+        ]
+      }
+    ],
+    "note": "重点读实际执行路径。代码能证明的实现、官方部署文档、工程推断分别说明。性能数据没有在本机复测。",
+    "refs": [
+      [
+        "DeepInfer release scope",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/README.md#L1-L42"
+      ]
+    ]
+  },
+  {
+    "section": "Scope",
+    "title": "The release boundary",
+    "lead": "Offline inference includes model execution and local cache machinery",
+    "blocks": [
+      {
+        "type": "table",
+        "headers": [
+          "Released code",
+          "Outside the complete public service"
+        ],
+        "rows": [
+          [
+            "Scheduler, model, sampler, local GPU KV/state allocation",
+            "External KV cache system and storage lifecycle"
+          ],
+          [
+            "Attention DP/CP, MoE EP, expert placement and shuffle",
+            "VE/prefill/decode service orchestration"
+          ],
+          [
+            "Async worker steps, speculative decoding, output constraints",
+            "Routing and load balancing across service replicas"
+          ]
+        ]
+      }
+    ],
+    "note": "README 说缺 KV cache system，不代表没有 GPU KV 管理。必须区分本地执行内存与跨机器、可持久化的缓存服务。",
+    "refs": [
+      [
+        "Explicit release boundary",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/README.md#L33-L42"
+      ],
+      [
+        "Integration hooks",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/engine/llm_engine.py#L787-L849"
+      ]
+    ]
+  },
+  {
+    "section": "Scope",
+    "title": "Repository inventory by system layer",
+    "lead": "The recent runtime release builds on earlier infrastructure libraries",
+    "blocks": [
+      {
+        "type": "table",
+        "headers": [
+          "Layer",
+          "Official repositories",
+          "Review depth"
+        ],
+        "rows": [
+          [
+            "Runtime and API protocol",
+            "DeepInfer, deepseek-recipe",
+            "Code paths reviewed"
+          ],
+          [
+            "Kernels and toolchain",
+            "FlashMLA, DeepGEMM, DeepEP, DeepSelect, TileKernels, DeepJIT",
+            "DeepInfer call sites and pinned gitlinks"
+          ],
+          [
+            "Ascend and speculative ecosystem",
+            "DeepGEMM-Ascend, DeepEP-Ascend, DeepSpec",
+            "Inventory context only"
+          ],
+          [
+            "Storage, data processing, training",
+            "3FS, smallpond, DualPipe, EPLB",
+            "Earlier 2025 release family"
+          ],
+          [
+            "Agent tools",
+            "deepseek-harness",
+            "Search/filesystem seams inspected"
+          ]
+        ]
+      }
+    ],
+    "note": "2026 年新发布的推理组件和 2025 年开源周项目不是同一批。这里列相关系统仓库，不把所有模型权重仓库混入。",
+    "refs": [
+      [
+        "Official infra index",
+        "https://github.com/deepseek-ai/open-infra-index"
+      ],
+      [
+        "Vendor dependencies",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/.gitmodules#L1-L18"
+      ],
+      [
+        "Official organization",
+        "https://github.com/deepseek-ai"
+      ],
+      [
+        "Inventory snapshot",
+        "https://github.com/wangyong1972/docs/blob/main/papers/deepseek-inference/inventory.json"
+      ]
+    ]
+  },
+  {
+    "section": "Scope",
+    "title": "“Search” and “filesystem” have distinct meanings",
+    "lead": "No standalone open search backend has been established in this review",
+    "blocks": [
+      {
+        "type": "table",
+        "headers": [
+          "Code location",
+          "What the public source implements"
+        ],
+        "rows": [
+          [
+            "harness web-deepseek-api/src/search.ts",
+            "An HTTP adapter calling /v1/tools/search"
+          ],
+          [
+            "harness tool-fs-search/src/search-core.ts",
+            "Local glob/grep discovery using packaged ripgrep"
+          ],
+          [
+            "harness fs-local / fs-sandbox / fs-observation-policy",
+            "Agent file access, mutation containment, freshness policy"
+          ],
+          [
+            "deepseek-ai/3FS",
+            "Distributed storage, separate from agent file tools"
+          ],
+          [
+            "DeepSelect",
+            "GPU TopK selection for attention and sampling"
+          ]
+        ]
+      }
+    ],
+    "note": "用户说的 search 仍可能指其他项目。已验证的 web search 是 API 客户端，不是爬虫或索引后端。文件系统工具与 3FS 也不能混为一谈。",
+    "refs": [
+      [
+        "Search provider code",
+        "https://github.com/deepseek-ai/deepseek-harness/blob/687f282e8625c6b8d11ff58211a90524be2e4317/packages/web/web-deepseek-api/src/search.ts#L1-L95"
+      ],
+      [
+        "ripgrep execution",
+        "https://github.com/deepseek-ai/deepseek-harness/blob/687f282e8625c6b8d11ff58211a90524be2e4317/packages/fs/tool-fs-search/src/search-core.ts#L1-L40"
+      ],
+      [
+        "Filesystem contract",
+        "https://github.com/deepseek-ai/deepseek-harness/blob/687f282e8625c6b8d11ff58211a90524be2e4317/packages/fs/README.md#L10-L38"
+      ],
+      [
+        "3FS",
+        "https://github.com/deepseek-ai/3FS"
+      ]
+    ]
+  },
+  {
+    "section": "Execution",
+    "title": "The public entry point",
+    "lead": "LLM.generate adds every request before driving the engine loop",
+    "blocks": [
+      {
+        "type": "code",
+        "text": "LLM.generate(...)\n  for i in range(num_requests):\n      self._add_request(...)\n  return self._run_engine(use_tqdm)"
+      },
+      {
+        "type": "bullets",
+        "items": [
+          "<code>_add_request</code> copies sampling parameters, tokenizes if needed, converts IDs to int32.",
+          "The offline example configures EP/DP/CP, memory fraction, token budget and sequence cap."
+        ]
+      }
+    ],
+    "note": "这不是 HTTP server。批量输入由 Python API 注入 engine，适合离线推理与集成验证。",
+    "refs": [
+      [
+        "LLM.generate / _add_request",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/entrypoints/llm.py#L90-L184"
+      ],
+      [
+        "Offline configuration",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/examples/offline_inference.py#L25-L60"
+      ]
+    ]
+  },
+  {
+    "section": "Execution",
+    "title": "Request and token execution flow",
+    "lead": "One request moves through admission, metadata, forward, sampling, and reclamation",
+    "blocks": [
+      {
+        "type": "table",
+        "headers": [
+          "Stage",
+          "Concrete implementation"
+        ],
+        "rows": [
+          [
+            "Input conversion and Sequence creation",
+            "LLM._add_request / LLMEngine.add_request"
+          ],
+          [
+            "Batch selection and metadata",
+            "Scheduler.schedule in scheduler.hpp"
+          ],
+          [
+            "Device execution and previous-step retirement",
+            "Worker.execute_model_step"
+          ],
+          [
+            "Main model / sampler",
+            "ModelRunner.execute_main_model / execute_sample"
+          ],
+          [
+            "State update and next token output",
+            "LLMEngine.post_process / Scheduler.process_outputs"
+          ],
+          [
+            "Final drain",
+            "LLM._run_engine / flush_inflight_reqs"
+          ]
+        ]
+      }
+    ],
+    "note": "按调用链读代码比按目录猜架构更可靠。step 返回的结果在异步路径可能属于上一个 batch。",
+    "refs": [
+      [
+        "Engine step",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/engine/llm_engine.py#L860-L1029"
+      ],
+      [
+        "Worker loop",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/worker/worker.py#L89-L189"
+      ]
+    ]
+  },
+  {
+    "section": "Scheduling",
+    "title": "Batch type requires group agreement",
+    "lead": "NORMAL engines vote on prefill versus decode across DP ranks",
+    "blocks": [
+      {
+        "type": "code",
+        "text": "// Scheduler._schedule, condition shown exactly\nbool want = (get_gpu_cache_usage() <= GPU_CACHE_PREFILL_WATERMARK)\n            && _has_prefill_waiting();\n// ANY: one rank wants prefill, ALL: every rank wants prefill\n// Second vote: a rank actually scheduled work."
+      },
+      {
+        "type": "bullets",
+        "items": [
+          "The watermark is <code>0.9</code>. Configured intervals create ALL and ANY attempt points.",
+          "Idle ranks execute a placeholder prefill step when another rank has work.",
+          "A second vote falls back to decode when admission fails everywhere."
+        ]
+      }
+    ],
+    "note": "这保证 collective 的执行步型一致。ANY 尝试给孤立 rank 兜底，第二次投票避免 waiting 有请求却无法分配时反复空跑。",
+    "refs": [
+      [
+        "Scheduler._schedule",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/csrc/engine/scheduler.hpp#L275-L344"
+      ],
+      [
+        "Watermark",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/csrc/engine/scheduler.hpp#L78-L105"
+      ]
+    ]
+  },
+  {
+    "section": "Scheduling",
+    "title": "Prefill admission and chunking",
+    "lead": "The queue head must satisfy memory, sequence, and token constraints",
+    "blocks": [
+      {
+        "type": "code",
+        "text": "new_workload = std::min(seq_workload,\n    (max_num_batched_tokens - num_batched_tokens) / cp_align * cp_align);"
+      },
+      {
+        "type": "bullets",
+        "items": [
+          "<code>_schedule_prefill</code> scans waiting requests from the front and stops at an unschedulable head.",
+          "<code>AllocStatus::LATER</code> waits for blocks. <code>NEVER</code> rejects a request that exceeds total capacity.",
+          "The remaining batch-token budget bounds each chunk, aligned to CP requirements.",
+          "The scheduler also limits prompt count and aggregate key length. Forked prefixes require block/state cloning."
+        ]
+      }
+    ],
+    "note": "公开版本这段 admission 主要受 token、slot、KV 限制。部署 Q&A 描述的跨实例 compute-quota 路由不能当作这里已经完整实现。",
+    "refs": [
+      [
+        "Scheduler._schedule_prefill",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/csrc/engine/scheduler.hpp#L351-L550"
+      ]
+    ]
+  },
+  {
+    "section": "Scheduling",
+    "title": "Decode admission and preemption",
+    "lead": "Memory pressure can terminate requests or send them back for recomputation",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "The scheduler admits prompted requests and prepares forked state and tail blocks.",
+          "It sorts running sequences by output length, visits the short-output end, and preempts from the opposite end when blocks run out.",
+          "<code>_append_slot</code> grows each admitted sequence, then <code>MTPVarlen.schedule</code> chooses verification lengths.",
+          "<code>_preempt</code> stops structured-output requests and stop-on-preemption configurations. Other requests reset and re-enter waiting."
+        ]
+      }
+    ],
+    "note": "这里的排序键是已生成长度，不是预测完成时间。COMPLETION 引擎没有 prefill 通道，构造时强制 stop_preempted_request=true。",
+    "refs": [
+      [
+        "Scheduler._schedule_decode",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/csrc/engine/scheduler.hpp#L559-L661"
+      ],
+      [
+        "Scheduler._preempt",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/csrc/engine/scheduler.hpp#L766-L790"
+      ],
+      [
+        "Completion invariant",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/csrc/engine/scheduler.hpp#L98-L104"
+      ]
+    ]
+  },
+  {
+    "section": "Execution",
+    "title": "Asynchronous scheduling overlaps retirement",
+    "lead": "The worker launches current forward before retiring previous sampling results",
+    "blocks": [
+      {
+        "type": "code",
+        "text": "# Worker.execute_model_step, order abridged\nmain_model_output = self.model_runner.execute_main_model(...)\nrequest_outputs = self._post_process_step(self.prev_step_state)\nsampler_output = self.model_runner.execute_sample(...)\n# ZOS decode defers current post-process to the next step\nself.prev_step_state = curr_step_state"
+      },
+      {
+        "type": "bullets",
+        "items": [
+          "Prompt and non-ZOS steps retire immediately. ZOS decode keeps one previous step in flight.",
+          "<code>execute_main_model</code> and <code>execute_sample</code> wrap their device launch sections in <code>forbid_cuda_sync()</code>."
+        ]
+      }
+    ],
+    "note": "“zero overhead”是优化目标，不是没有 CPU 工作。关键是 CPU bookkeeping 与下一次 GPU forward 重叠，而不是神奇地消失。",
+    "refs": [
+      [
+        "Worker.execute_model_step",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/worker/worker.py#L89-L189"
+      ],
+      [
+        "Launch synchronization boundary",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/worker/model_runner.py#L308-L368"
+      ]
+    ]
+  },
+  {
+    "section": "Execution",
+    "title": "Scheduling ahead requires device corrections",
+    "lead": "CPU sequence lengths can lag the most recent sampling decision",
+    "blocks": [
+      {
+        "type": "code",
+        "text": "compute_seqlens_q_by_confidence_rates(... confidence_rates_gpu ...)\ncompute_seqlens_k_zos(... num_accepted_tokens_gpu ...)\nseqlens_q_cpu[:n_seq].copy_(seqlens_q[:n_seq], non_blocking=True)"
+      },
+      {
+        "type": "bullets",
+        "items": [
+          "<code>prepare_zos_inputs</code> maps overlapping sequences between the current and previous batch.",
+          "GPU kernels use prior acceptance counts to correct key lengths and confidence rates to adjust query lengths.",
+          "Varlen query lengths copy back asynchronously. The worker waits for that copy before updating CPU sampling metadata.",
+          "The final drain explicitly synchronizes and processes remaining in-flight work."
+        ]
+      }
+    ],
+    "note": "异步优化把依赖转成显式 remap 和事件。集成时不能绕开 flush，也不能把 CPU cache.num_tokens 当作最新 GPU 状态。",
+    "refs": [
+      [
+        "Worker._correct_seqlens_qk",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/worker/worker.py#L191-L246"
+      ],
+      [
+        "Retirement and drain",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/worker/worker.py#L248-L283"
+      ],
+      [
+        "C++ ZOS input preparation",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/csrc/engine/zos.cpp#L142-L277"
+      ]
+    ]
+  },
+  {
+    "section": "Execution",
+    "title": "Object lifetime is part of correctness",
+    "lead": "Pooled outputs and borrowed vectors need explicit ownership rules",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "<code>LLMEngine.step</code> documents that RequestOutput objects expire on the next step.",
+          "The offline loop clones each output before retaining it.",
+          "Scheduler outputs borrow clone/zero vector storage that the next <code>schedule()</code> clears.",
+          "Deferred release collects metadata, outputs, and block/state unpins across worker execution."
+        ]
+      }
+    ],
+    "note": "对外做 streaming wrapper 时尤其容易踩这个坑：必须复制或明确转移生命周期，不能把池化指针异步留给网络线程。",
+    "refs": [
+      [
+        "Output lifetime contract",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/engine/llm_engine.py#L860-L870"
+      ],
+      [
+        "Offline output cloning",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/entrypoints/llm.py#L186-L198"
+      ],
+      [
+        "Borrowed vector contract",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/csrc/engine/scheduler.hpp#L275-L285"
+      ],
+      [
+        "DeferredRelease",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/engine/llm_engine.py#L69-L112"
+      ]
+    ]
+  },
+  {
+    "section": "Memory",
+    "title": "Local block allocation and sharing",
+    "lead": "BlockManager tracks free blocks and reference counts under a lock",
+    "blocks": [
+      {
+        "type": "code",
+        "text": "int allocate() {\n    int block_id = _pop_front();\n    _blocks[block_id].ref_count += 1;\n    return block_id;\n}\n// pin increments the count, free returns a block at count == 0"
+      },
+      {
+        "type": "bullets",
+        "items": [
+          "Block ID 0 is reserved as an empty sentinel.",
+          "Sequence block tables reference physical storage. Fork paths pin shared data and clone writable tail blocks.",
+          "A separate state manager reserves recurrent/compression state slots alongside KV blocks."
+        ]
+      }
+    ],
+    "note": "公开代码能读到显存内 block 分配和共享语义，但这不等于前缀 hash 索引、跨实例恢复、存储 GC 都已开源。",
+    "refs": [
+      [
+        "Blocks / BlockManager",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/csrc/engine/block_manager.hpp#L27-L160"
+      ],
+      [
+        "Fork cloning",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/csrc/engine/scheduler.hpp#L598-L619"
+      ],
+      [
+        "State allocation check",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/csrc/engine/scheduler.hpp#L195-L210"
+      ]
+    ]
+  },
+  {
+    "section": "Memory",
+    "title": "KV memory includes multiple representations",
+    "lead": "Cache sizing follows attention layout, indexer precision, and rollback history",
+    "blocks": [
+      {
+        "type": "table",
+        "headers": [
+          "Representation",
+          "Code-level sizing or mapping"
+        ],
+        "rows": [
+          [
+            "Main interleaved KV",
+            "V41_FORMAT / V41_FP4_FORMAT include data and scale bytes"
+          ],
+          [
+            "Indexer K cache",
+            "FP4 channels plus one UE8M0 scale per 32 channels"
+          ],
+          [
+            "Sliding-window state",
+            "window_size + MAX_BACKTRACKING_TOKENS"
+          ],
+          [
+            "Compression state ring",
+            "compress_ratio + max(0, backtracking - 1)"
+          ],
+          [
+            "Shared layers",
+            "layer_kv_map and index maps reuse earlier layer storage"
+          ]
+        ]
+      }
+    ],
+    "note": "不能直接套传统 MHA 的 layers×heads×head_dim 公式。这里有压缩、量化、状态环和跨层共享，容量规划必须按实际模型配置计算。",
+    "refs": [
+      [
+        "KV bytes and ring sizing",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/worker/cache_engine.py#L44-L146"
+      ],
+      [
+        "Layer sharing maps",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/worker/cache_engine.py#L153-L188"
+      ]
+    ]
+  },
+  {
+    "section": "Memory",
+    "title": "Bounded replay compacts consumer work",
+    "lead": "YoCo keeps a bounded suffix where the model structure permits it",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "The model configuration divides producer and consumer layers at <code>n_prefill_layer</code>.",
+          "<code>yoco_boundary_compact</code> gathers kept query rows. With CP, it gathers contributions and redistributes compact rows.",
+          "Consumer metadata switches query-aligned fields and the SWA visibility domain.",
+          "README defaults use compact mode and 140 retained tokens. The suffix must cover SWA plus maximum backtracking."
+        ]
+      }
+    ],
+    "note": "这不是任意模型都能截断 prefix。依赖 YoCo 层结构和恢复状态，140 是该版本 V4.1 配置，不是通用窗口。",
+    "refs": [
+      [
+        "YoCo boundary operations",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/model_executor/models/v4_modules/yoco.py#L14-L77"
+      ],
+      [
+        "Consumer metadata",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/model_executor/input_metadata/yoco.py#L94-L142"
+      ],
+      [
+        "Release configuration",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/README.md#L23-L29"
+      ]
+    ]
+  },
+  {
+    "section": "Parallelism",
+    "title": "Attention and experts use different groups",
+    "lead": "DP, CP, and EP compose around the model execution path",
+    "blocks": [
+      {
+        "type": "table",
+        "headers": [
+          "Group",
+          "Implementation role"
+        ],
+        "rows": [
+          [
+            "Attention DP",
+            "Separate request streams, synchronized batch-type decisions"
+          ],
+          [
+            "Balanced CP",
+            "Distributes context work, uses gather and broadcast helpers"
+          ],
+          [
+            "MoE EP",
+            "Contiguous expert groups exchange routed token activations"
+          ],
+          [
+            "CPU groups",
+            "Gloo groups coordinate host-side metadata and decisions"
+          ],
+          [
+            "Shared-memory queue",
+            "CP metadata broadcast when CP size exceeds one"
+          ]
+        ]
+      }
+    ],
+    "note": "源码支持 CP，部署 Q&A 同时说当前生产配置未使用 TP/CP。支持能力与具体线上配置需要分开看。",
+    "refs": [
+      [
+        "ParallelProcessGroup.create_process_groups",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/model_executor/parallel_utils/parallel_state.py#L77-L130"
+      ],
+      [
+        "CP all-gather buffer",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/model_executor/parallel_utils/cp.py#L14-L51"
+      ],
+      [
+        "Deployment choices, documentation",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/doc/inference_deployment_qa.md#L40-L70"
+      ]
+    ]
+  },
+  {
+    "section": "Parallelism",
+    "title": "MoE dispatch, expert compute, and combine",
+    "lead": "The forward path explicitly coordinates communication and shared experts",
+    "blocks": [
+      {
+        "type": "code",
+        "text": "topk_idx, topk_weights = self.gate_forward(...)\nevent_overlap = self.dispatch(...)\nmoe_in_hidden, ..., handle = event_overlap.current_stream_wait()\nmoe_out_hidden = self.routed_experts_forward(...)\ncombine_pre_evt = self.ep_buffer.capture()\nshared_out = self.shared_forward(hidden_states)\nevent_overlap = self.combine(..., shared_out, handle, combine_pre_evt)"
+      },
+      {
+        "type": "bullets",
+        "items": [
+          "DeepEP owns token exchange and handles. Routed expert weights use rank-local physical expert rows.",
+          "The standard path limits communication SM use while computing shared experts. A separate mega-MoE branch exists."
+        ]
+      }
+    ],
+    "note": "通信开销与计算并行设计绑定。单看 GEMM 吞吐不能推导整个 MoE step 的收益。",
+    "refs": [
+      [
+        "MoE.forward",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/model_executor/models/v4_modules/mlp.py#L565-L616"
+      ],
+      [
+        "dispatch / combine",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/model_executor/models/v4_modules/mlp.py#L461-L510"
+      ],
+      [
+        "Expert parameter layout",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/model_executor/models/v4_modules/moe.py#L70-L112"
+      ]
+    ]
+  },
+  {
+    "section": "Parallelism",
+    "title": "EPLB balances physical expert replicas",
+    "lead": "The policy uses historical per-step load rather than only total token counts",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "<code>rebalance_experts_global</code> allocates redundant replicas to hot logical experts.",
+          "<code>_batch_greedy_indices</code> places physical experts under per-rank capacity constraints.",
+          "The placement objective sums the per-step maximum rank load over the history window.",
+          "Shuffle code offers batched P2P and an intranode symmetric-memory/IPC path. This differs from request routing across replicas."
+        ]
+      }
+    ],
+    "note": "EPLB 改 expert 布局，DP load balancer 改请求去向。两者优化不同失衡来源，不能因为有 EPLB 就宣称公开了完整服务路由。",
+    "refs": [
+      [
+        "Replica selection and greedy placement",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/model_executor/eplb/policy.py#L12-L140"
+      ],
+      [
+        "Weight shuffle paths",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/model_executor/eplb/shuffle.py#L1-L12"
+      ],
+      [
+        "Intranode shuffle",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/model_executor/eplb/shuffle.py#L150-L175"
+      ]
+    ]
+  },
+  {
+    "section": "Model and kernels",
+    "title": "Attention combines SWA and compressed KV",
+    "lead": "Prefill and decode use different data paths into sparse attention kernels",
+    "blocks": [
+      {
+        "type": "table",
+        "headers": [
+          "Phase",
+          "Observed implementation"
+        ],
+        "rows": [
+          [
+            "Prefill",
+            "Builds full/SWA and compressed indices, calls prefill_attn_varlen_sparse"
+          ],
+          [
+            "Decode",
+            "Reads paged swa_cache and ca_cache, calls decode_mla_mqa_sparse"
+          ],
+          [
+            "Projection",
+            "Fused norm/RoPE/cast plus DeepGEMM output projection"
+          ],
+          [
+            "Metadata",
+            "Kernel scheduling metadata and index lengths vary by attention configuration"
+          ]
+        ]
+      }
+    ],
+    "note": "这里描述的是 V4 模块实现，不把 V3 的 MLA 简图直接套过来。SWA、压缩索引和共享层会改变数据可见范围。",
+    "refs": [
+      [
+        "Prefill and decode attention",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/model_executor/models/v4_modules/attn.py#L589-L670"
+      ],
+      [
+        "Fused projection operations",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/model_executor/models/v4_modules/attn.py#L158-L226"
+      ]
+    ]
+  },
+  {
+    "section": "Model and kernels",
+    "title": "Indexer logits feed TopK attention selection",
+    "lead": "DeepSelect selects token indices inside the model",
+    "blocks": [
+      {
+        "type": "code",
+        "text": "# MQA._topk_prefill, abridged\np_sum = self._compute_prefill_p_sum(...)\ntopk(p_sum, self.topk_tokens, sorted=False,\n     end=topk_lens[chunk], sorted_index=True,\n     output_idx=topk_index[chunk],\n     idx_oob_fill_value=-1, return_value=False)"
+      },
+      {
+        "type": "bullets",
+        "items": [
+          "DeepGEMM computes dense or sparse FP8/FP4 MQA logits.",
+          "Prefill chunks the query computation to bound temporary score storage. Decode uses paged metadata.",
+          "Candidate-block paths restore token indices after TopK selection."
+        ]
+      }
+    ],
+    "note": "模型内部的检索/TopK 与 web search 是不同概念。这里返回注意力 token 索引，不是文档搜索结果。",
+    "refs": [
+      [
+        "MQA._topk_prefill",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/model_executor/models/v4_modules/index_attn.py#L284-L376"
+      ],
+      [
+        "Paged decode logits",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/model_executor/models/v4_modules/index_attn.py#L378-L454"
+      ]
+    ]
+  },
+  {
+    "section": "Model and kernels",
+    "title": "Kernel dependencies are pinned separately",
+    "lead": "DeepInfer records exact vendor gitlinks rather than bundling all implementation",
+    "blocks": [
+      {
+        "type": "table",
+        "headers": [
+          "Dependency",
+          "Pinned revision",
+          "Role at call sites"
+        ],
+        "rows": [
+          [
+            "FlashMLA",
+            "2e5429fc5653",
+            "Attention kernels and fused transforms"
+          ],
+          [
+            "DeepGEMM",
+            "1fc9c66975ee",
+            "Low-precision matrix and indexer logits"
+          ],
+          [
+            "DeepEP",
+            "f6aa38fe06cd",
+            "Expert token dispatch/combine"
+          ],
+          [
+            "DeepSelect",
+            "bfa4507d935f",
+            "TopK selection"
+          ],
+          [
+            "Ascend variants",
+            "DeepEP 3b25377d04b2<br>DeepGEMM 3a35326271b0",
+            "Platform-specific dependencies"
+          ]
+        ]
+      }
+    ],
+    "note": "本次深读重点是 runtime 与库的接口，不声称逐行审计所有 vendor kernel。复现时必须递归获取这些锁定版本。",
+    "refs": [
+      [
+        "Pinned vendor tree",
+        "https://github.com/deepseek-ai/DeepInfer/tree/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/vendor"
+      ],
+      [
+        "Submodule URLs",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/.gitmodules#L1-L18"
+      ],
+      [
+        "Kernel use",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/model_executor/models/v4_modules/index_attn.py#L10-L24"
+      ]
+    ]
+  },
+  {
+    "section": "Model and kernels",
+    "title": "Graph buckets influence execution cost",
+    "lead": "The graph runner selects the smallest captured bucket that covers total_q",
+    "blocks": [
+      {
+        "type": "code",
+        "text": "index = bisect_left(self.batch_sizes, total_q)\nif index == len(self.batch_sizes):\n    raise ValueError(...)\nbatch_size = self.batch_sizes[index]\nreturn batch_size, self.graphs[batch_size]"
+      },
+      {
+        "type": "bullets",
+        "items": [
+          "Capture stores reusable graph outputs and input buffers, sharing a memory pool.",
+          "The replay path uses a graph handle for timing when supported.",
+          "Bucket padding affects both execution cost and the speculative scheduler’s best batch choice."
+        ]
+      }
+    ],
+    "note": "有效 token 数与 graph bucket 大小是两个量。调参要同时看 padding、内存与测得的耗时曲线，不能只增加 batch 上限。",
+    "refs": [
+      [
+        "Capture / select / replay",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/worker/cuda_graph_runner.py#L82-L156"
+      ],
+      [
+        "Graph-aware throughput estimate",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/csrc/engine/mtp_varlen.hpp#L226-L253"
+      ]
+    ]
+  },
+  {
+    "section": "Speculation and output",
+    "title": "Confidence scheduling chooses verification work",
+    "lead": "MTPVarlen maximizes expected accepted tokens per estimated step time",
+    "blocks": [
+      {
+        "type": "code",
+        "text": "time_ms = baseline_ms + slope_ms * graph_size + sampler_ms;\ncur_throughput = cur_expected / time_ms;\nif (cur_throughput > best_throughput) {\n    best_throughput = cur_throughput;\n    best_bsz = cur_bsz;\n}"
+      },
+      {
+        "type": "bullets",
+        "items": [
+          "One golden token per sequence forms the baseline. Ranked confidence estimates add draft verification slots.",
+          "N−2 confidence chooses total work. N−1 information allocates per-sequence lengths, with GPU correction under ZOS.",
+          "Measured forward/sampler times update runtime estimates. No decode curve falls back to all available drafts."
+        ]
+      }
+    ],
+    "note": "DSpark 的关键是 draft 和 verification 的联合系统设计。这里不是固定每个请求验证 5 个 token，nextn 只是最大草稿长度。",
+    "refs": [
+      [
+        "MTPVarlen.schedule",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/csrc/engine/mtp_varlen.hpp#L133-L267"
+      ],
+      [
+        "Runtime feedback",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/engine/llm_engine.py#L984-L1003"
+      ]
+    ]
+  },
+  {
+    "section": "Speculation and output",
+    "title": "A device kernel redistributes the token budget",
+    "lead": "The CUDA TileLang implementation ranks cumulative draft confidence",
+    "blocks": [
+      {
+        "type": "code",
+        "text": "# Example, two sequences and two draft positions\nconditional rates:  A [0.9, 0.8]   B [0.6, 0.9]\ncumulative rates:   A [0.9, 0.72]  B [0.6, 0.54]\ntotal_q = 5, golden tokens = 2, extra budget = 3\nselected drafts: A1, A2, B1\nseqlens_q: A = 3, B = 2"
+      },
+      {
+        "type": "bullets",
+        "items": [
+          "Phase 1 gathers prior rows through <code>remap</code> and computes cumulative products. Fresh rows use zero rates.",
+          "Phase 2 counts better candidates in parallel. Higher confidence wins, with lower flat index breaking ties.",
+          "Each sequence gets one golden token plus its selected drafts. This is an explicit rank-counting kernel, not a full sort."
+        ]
+      }
+    ],
+    "note": "示例按代码手算，未运行 GPU。pairwise rank counting 的工作量随 batch 和 nextn 增长，适合结合实际小 nextn 和测量结果评估，不能凭算法名假设无限扩展。",
+    "refs": [
+      [
+        "CUDA confidence kernel",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/model_executor/layers/tilelang_ops/cuda/schedule_mtp_varlen.py#L14-L83"
+      ],
+      [
+        "Wrapper and reference",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/model_executor/layers/tilelang_ops/schedule_mtp_varlen.py#L11-L85"
+      ]
+    ]
+  },
+  {
+    "section": "Speculation and output",
+    "title": "Output constraints interact with recovery",
+    "lead": "Determinism and structured decoding require explicit configurations",
+    "blocks": [
+      {
+        "type": "table",
+        "headers": [
+          "Feature",
+          "Released behavior and constraint"
+        ],
+        "rows": [
+          [
+            "Deterministic sampling",
+            "README requires batch invariance, MTP varlen off, and fixed seq_seed on NVIDIA"
+          ],
+          [
+            "Structured output",
+            "JSON schema, regex, or EBNF compile through XGrammar"
+          ],
+          [
+            "Token enforcement",
+            "Matcher builds next-token vocabulary masks and supports rollback"
+          ],
+          [
+            "Preemption",
+            "Structured-output state currently blocks recomputation and causes request termination"
+          ]
+        ]
+      }
+    ],
+    "note": "“支持 JSON schema”不代表任何资源压力下都可透明重试。服务层要把 FINISHED_PREEMPTED 等结束原因准确传给上层。",
+    "refs": [
+      [
+        "Determinism settings",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/README.md#L27-L29"
+      ],
+      [
+        "Compiler.dispatch_and_compile",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/structure_output/compiler.py#L54-L70"
+      ],
+      [
+        "Matcher mask and rollback",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/structure_output/matcher.py#L181-L223"
+      ],
+      [
+        "Preemption constraint",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/csrc/engine/scheduler.hpp#L766-L787"
+      ]
+    ]
+  },
+  {
+    "section": "Integration",
+    "title": "Recipe supplies a protocol boundary",
+    "lead": "deepseek-recipe converts conversations and output streams around an inference backend",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "Rust libraries and Python bindings handle API conversion, prompt rendering, token encoding, and response parsing.",
+          "<code>PromptTokenizer.encode_ids</code> receives explicit special-token ranges rather than treating all matching text as control tokens.",
+          "The caller supplies inference, tool execution, and HTTP transport. Constraint declarations still require backend enforcement."
+        ]
+      }
+    ],
+    "note": "要做兼容 API，tokenizer.encode(prompt) 之外还有协议语义。Recipe 是可复用边界，但不会自动把 DeepInfer 变成完整在线服务。",
+    "refs": [
+      [
+        "Recipe release scope",
+        "https://github.com/deepseek-ai/deepseek-recipe/blob/935817c66f5d6e64838f419692545f06787e485f/README.md#L9-L43"
+      ],
+      [
+        "Special-token-aware tokenizer",
+        "https://github.com/deepseek-ai/deepseek-recipe/blob/935817c66f5d6e64838f419692545f06787e485f/deepseek-recipe-encoding/src/tokenizer.rs#L13-L121"
+      ]
+    ]
+  },
+  {
+    "section": "Integration",
+    "title": "Benchmark scope and reproducibility",
+    "lead": "The published Pareto curves use different prefill and decode deployments",
+    "blocks": [
+      {
+        "type": "table",
+        "headers": [
+          "Reported setup",
+          "What an engineering comparison must retain"
+        ],
+        "rows": [
+          [
+            "Prefill: 4 SM100 GPUs",
+            "Input length, cached prefix, batch size, YoCo clipping"
+          ],
+          [
+            "Decode: 64 SM100 GPUs",
+            "Context length, request concurrency, nextn and acceptance assumptions"
+          ],
+          [
+            "Each within one scale-up domain",
+            "Topology and communication differ from cross-domain deployment"
+          ],
+          [
+            "examples/sweep/run_sweep.sh",
+            "Sweeps batch sizes with profiling disabled and emits JSONL"
+          ]
+        ]
+      }
+    ],
+    "note": "本 deck 不转抄图中曲线点，也不把离线结果当作线上 SLA。官方部署文档的集群规模、收入和约 80% 离线效率是陈述，不是本次验证结果。",
+    "refs": [
+      [
+        "Benchmark hardware",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/README.md#L77-L84"
+      ],
+      [
+        "Sweep inputs / output",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/examples/sweep/run_sweep.sh#L1-L90"
+      ],
+      [
+        "Deployment claims, documentation only",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/doc/inference_deployment_qa.md#L15-L26"
+      ]
+    ]
+  },
+  {
+    "section": "Integration",
+    "title": "Deployment prerequisites and missing services",
+    "lead": "The released target is Linux with recent datacenter accelerators",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "Supported model: DeepSeek-V4.1-Flash. Hardware: NVIDIA SM100 or Huawei Ascend 950.",
+          "README requires GCC ≥13, Python 3.12, CUDA 13 or CANN 9.2. A Mac cannot validate device execution.",
+          "A full service still needs request routing, cache lookup/storage lifecycle, inter-stage transfer, cancellation, and API transport.",
+          "Published Q&A describes external KV storage on 3FS and DP balancing. Those descriptions do not establish complete released source."
+        ]
+      }
+    ],
+    "note": "平台适配不等于任意显卡兼容。上线评估应先建立硬件、模型、锁定依赖和失败恢复矩阵，再考虑吞吐优化。",
+    "refs": [
+      [
+        "Hardware / prerequisites",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/README.md#L33-L52"
+      ],
+      [
+        "Storage and routing, documentation",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/doc/inference_deployment_qa.md#L130-L197"
+      ],
+      [
+        "Unimplemented service hooks",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/engine/llm_engine.py#L801-L849"
+      ]
+    ]
+  },
+  {
+    "section": "Implications",
+    "title": "Engineering takeaways",
+    "lead": "The strongest reusable ideas lie at state and execution boundaries",
+    "blocks": [
+      {
+        "type": "table",
+        "headers": [
+          "Observed design",
+          "Concrete evaluation work"
+        ],
+        "rows": [
+          [
+            "GPU correction of speculative metadata",
+            "Test abort, batch membership change, final drain, and rollback together"
+          ],
+          [
+            "Separate logical and physical experts",
+            "Measure hot-expert skew and redistribution cost at intended EP size"
+          ],
+          [
+            "Compressed/shared cache layouts",
+            "Budget HBM from actual formats and backtracking requirements"
+          ],
+          [
+            "Graph-aware verification budget",
+            "Profile graph buckets and sampler cost under realistic concurrency"
+          ],
+          [
+            "Public service boundary",
+            "Estimate external cache and routing integration before committing to adoption"
+          ]
+        ]
+      }
+    ],
+    "note": "这些是基于代码的工程建议，不是作者承诺。可先复用思想、验证局部组件，再决定是否整体采用 runtime。",
+    "refs": [
+      [
+        "Async correction",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/worker/worker.py#L191-L246"
+      ],
+      [
+        "Expert placement",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/deepinfer/model_executor/eplb/policy.py#L12-L73"
+      ],
+      [
+        "Runtime optimization",
+        "https://github.com/deepseek-ai/DeepInfer/blob/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9/csrc/engine/mtp_varlen.hpp#L221-L265"
+      ]
+    ]
+  },
+  {
+    "section": "Implications",
+    "title": "Source map and remaining evidence gaps",
+    "lead": "Every technical slide links a reviewed snapshot and source location",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "Read next: <code>entrypoints/llm.py</code>, <code>engine/llm_engine.py</code>, <code>csrc/engine/scheduler.hpp</code>, <code>worker/worker.py</code>.",
+          "Model path: <code>v4_modules/attn.py</code>, <code>index_attn.py</code>, <code>mlp.py</code>, plus <code>worker/cache_engine.py</code>.",
+          "Companions: harness search/file seams and Recipe token encoding. Full source index includes per-slide links.",
+          "Limits: static review, no GPU benchmark, no audit of the unreleased cache/routing services, and no verified standalone search backend."
+        ]
+      }
+    ],
+    "note": "可以沿 source index 复查每个结论。若用户的 search 指另一个新仓库，需要具体名称后补充，不能用猜测填空。",
+    "refs": [
+      [
+        "Complete source index",
+        "https://github.com/wangyong1972/docs/blob/main/papers/deepseek-inference/sources.md"
+      ],
+      [
+        "Reproducible authoring source",
+        "https://github.com/wangyong1972/docs/blob/main/papers/deepseek-inference/deck-source/slides.json"
+      ],
+      [
+        "Reviewed DeepInfer commit",
+        "https://github.com/deepseek-ai/DeepInfer/commit/9bd9cf243fc53ef9afbf8f04d391d989117d6ab9"
+      ]
+    ]
+  }
+]

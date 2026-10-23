@@ -1,0 +1,15 @@
+{
+  "slug": "lancedb-pretraining",
+  "title": "A Practical LLM Pretraining Pipeline with LanceDB",
+  "week": "2026-10-16",
+  "refs": [
+    [
+      "Blog",
+      "https://www.lancedb.com/blog/practical-llm-pretraining"
+    ],
+    [
+      "Example source",
+      "https://github.com/lancedb/training/blob/main/examples/llm_pretraining/README.md"
+    ]
+  ]
+}

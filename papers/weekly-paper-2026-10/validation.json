@@ -1,0 +1,127 @@
+{
+  "reviewed": "2026-10-23",
+  "deck_count": 10,
+  "slide_count": 120,
+  "layout_issues": [],
+  "external_urls_checked": 20,
+  "external_url_errors": [],
+  "decks": [
+    {
+      "deck": "synthetic-group-signals",
+      "slides": 12,
+      "pdf_pages": 12,
+      "visual_review": "All 12 slide previews inspected",
+      "sha256": {
+        "deck.html": "d722de06275678be5e2d79ddc318d5ad0f3be03ce57ae930cddf4dbbddd27022",
+        "deck.pdf": "8639801bdf6641ee23375238fd5e7244be1fbca57161ad2e1959580a7e327477",
+        "deck-source/slides.json": "586e762a9524549daf875c544a41fb7acf53ed685e43a712c70cb99b42bf2d67"
+      }
+    },
+    {
+      "deck": "mmvistareason",
+      "slides": 12,
+      "pdf_pages": 12,
+      "visual_review": "All 12 slide previews inspected",
+      "sha256": {
+        "deck.html": "c5464441b8b81239e4d3a360244e0fd046405eb0e66dd69a9410e1599b070fe2",
+        "deck.pdf": "7e544eb9c3872e13f06383932ff3ab360f0517fed55569c31c85853927c599bc",
+        "deck-source/slides.json": "681c848d687d5aa90512a4a3cbaa343b51cb1a55b4a74d311d4d0ccb4d4f3be5"
+      }
+    },
+    {
+      "deck": "iceberg-file-vector",
+      "slides": 12,
+      "pdf_pages": 12,
+      "visual_review": "All 12 slide previews inspected",
+      "sha256": {
+        "deck.html": "5019f2f75a05e6bb5358bf90ed9c885024e22bec82f4b9d6bd2293ac2ad97a6b",
+        "deck.pdf": "5995167932e7aa38b80355e5abfc36bec913a4ba981e78e165a3cb5dfc03199a",
+        "deck-source/slides.json": "307be8dc5bedb4c4ef10592f93c6ffb887328552acf537937fa3895c984db2f9"
+      }
+    },
+    {
+      "deck": "multiscore",
+      "slides": 12,
+      "pdf_pages": 12,
+      "visual_review": "All 12 slide previews inspected",
+      "sha256": {
+        "deck.html": "fb0d9d6fa8ba48d044773fa7bc0d2d1e5ab36f329bc4377f224cc7debd4d253d",
+        "deck.pdf": "b055943212eb65573efbab60abb119b4bcd36b9f3fcc7d29d29c779c3e043c2f",
+        "deck-source/slides.json": "1d8177e1b66a814da478d92c6666f0b02a55d2f7cc17ea51c22e59fd9a463f71"
+      }
+    },
+    {
+      "deck": "multimodal-spectrum",
+      "slides": 12,
+      "pdf_pages": 12,
+      "visual_review": "All 12 slide previews inspected",
+      "sha256": {
+        "deck.html": "f06326ae77641456f8f47f615221e1f93a90990c2657ddf626359398a73c2816",
+        "deck.pdf": "895f180827b2550f15ad00fbd54dbed9123c0b91c9051ab28beeda24b601427f",
+        "deck-source/slides.json": "4e11f6bd951824ae45543f30640dd315a3e94c8df44dbf80e0157ff3c774191e"
+      }
+    },
+    {
+      "deck": "spanner-lakehouse-catalog",
+      "slides": 12,
+      "pdf_pages": 12,
+      "visual_review": "All 12 slide previews inspected",
+      "sha256": {
+        "deck.html": "e4f66c88488e4cadbfe72ca5b7c129c1ec6208661159c6be2dbee36f4b2739cf",
+        "deck.pdf": "40efa345f1eccc5418e89ac2631b43d56ae191aac2d57487b01f7dc037fd18b4",
+        "deck-source/slides.json": "7cf5e627dac83a640c843bac67ded034f5083f2071f2045ac7de102c4b620e0b"
+      }
+    },
+    {
+      "deck": "sieveivf",
+      "slides": 12,
+      "pdf_pages": 12,
+      "visual_review": "All 12 slide previews inspected",
+      "sha256": {
+        "deck.html": "602b491077c2595fae067dc1b90fb3e8ba6e35973c5ca37f129b5ba2d4f3f4b8",
+        "deck.pdf": "b200da352775cfaa56d81569096696a590c7659d2ee8441a2703b35e49d5f5ad",
+        "deck-source/slides.json": "e610621672c82202e1e2940302d85c29cb53f3c659312c534dfd86bf9c3ecb7e"
+      }
+    },
+    {
+      "deck": "lancedb-pretraining",
+      "slides": 12,
+      "pdf_pages": 12,
+      "visual_review": "All 12 slide previews inspected",
+      "sha256": {
+        "deck.html": "49e58f1275cf5e56ce03ab2b6566ae4d116b9286c9ff07759fb68e2fcb5b8860",
+        "deck.pdf": "0cc521d5b8ecadf955fdddf50393377e4a4e323444d51af87fae150d87b8b47b",
+        "deck-source/slides.json": "a16e4644aec98a2d16645ce4d8989136db4094f0db830c0991db132617c40176"
+      }
+    },
+    {
+      "deck": "omnicapbench",
+      "slides": 12,
+      "pdf_pages": 12,
+      "visual_review": "All 12 slide previews inspected",
+      "sha256": {
+        "deck.html": "4a5698352a4e17eb30cb082b92e83475d606f9a43f3c87bc131bccf59d6a41f0",
+        "deck.pdf": "474d0e19e98d757f91c1383c72f2d392ddce0ef4fc5ea85c5c1269e71142b7b9",
+        "deck-source/slides.json": "590cb3d7509d3f664d16383a531432d4b4797b24e0b463e3a84ec5a84b1d2012"
+      }
+    },
+    {
+      "deck": "adaframe",
+      "slides": 12,
+      "pdf_pages": 12,
+      "visual_review": "All 12 slide previews inspected",
+      "sha256": {
+        "deck.html": "5474a552080e14ce6e6daa226efbf149dbc07d8ff84d92ac888bee74bffb1d73",
+        "deck.pdf": "9f3779aeb27425974f0ea4b33a3ef7783eb7e1d25de88bdddacb9c1a7dfa9236",
+        "deck-source/slides.json": "a22682307c260205cfb85dacc2ae4518af071e831e87615fa49d68abd96ba3c1"
+      }
+    }
+  ],
+  "limitations": [
+    "Static research review, no downloaded research code executed",
+    "No training or GPU benchmarks",
+    "HTML plus JSON is the editable source, PDF is the viewable export",
+    "SieveIVF and AdaFrame dedicated public implementation not verified",
+    "No shared root index changed"
+  ]
+}

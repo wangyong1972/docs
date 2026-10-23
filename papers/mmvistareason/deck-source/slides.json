@@ -1,0 +1,341 @@
+[
+  {
+    "title": "MMVistaReason",
+    "section": "Context",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "Open-data construction and capacity-aware multimodal post-training",
+          "October 9 recommendation, anchored to arXiv v1",
+          "A 4B/9B recipe spanning analytical and real-world visual reasoning"
+        ]
+      }
+    ],
+    "note": "本 deck 固定阅读 v1。arXiv 页面存在 10 月 22 日 v2，本次不把新版本结论混入推荐时版本。",
+    "refs": [
+      [
+        "Paper v1",
+        "https://arxiv.org/html/2610.01352v1"
+      ],
+      [
+        "Project",
+        "https://github.com/JackieForest/MMVistaReason/tree/ec3b94644b0a474334ba6c6a9089b32fef806ac2"
+      ]
+    ]
+  },
+  {
+    "title": "Two reasoning groups define the pipeline",
+    "section": "Context",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "Analytical tasks include science, mathematics, visual logic, and charts.",
+          "Real-world tasks include perception, counting, spatial reasoning, and GUI grounding.",
+          "Separate specialization addresses negative transfer under mixed-domain RL."
+        ]
+      }
+    ],
+    "note": "分组同时影响数据标签、RL expert 路由与后续蒸馏，并非仅用于最终报表。第 1、3 节。",
+    "refs": [
+      [
+        "Paper v1",
+        "https://arxiv.org/html/2610.01352v1"
+      ],
+      [
+        "Project",
+        "https://github.com/JackieForest/MMVistaReason/tree/ec3b94644b0a474334ba6c6a9089b32fef806ac2"
+      ]
+    ]
+  },
+  {
+    "title": "Cleaning preserves distinct questions per image",
+    "section": "Mechanism",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "SHA-256, pHash, and CLIP similarity detect redundant image/question pairs.",
+          "The same image can retain multiple distinct questions.",
+          "Qwen3.5-122B-A10B normalizes language, answerability, instructions, and answer forms."
+        ]
+      }
+    ],
+    "note": "一图多问不应按图片 ID 整体删除。语义清洗也可能改写任务，生产环境应保留原文和转换记录。第 3.1 节。",
+    "refs": [
+      [
+        "Paper v1",
+        "https://arxiv.org/html/2610.01352v1"
+      ],
+      [
+        "Project",
+        "https://github.com/JackieForest/MMVistaReason/tree/ec3b94644b0a474334ba6c6a9089b32fef806ac2"
+      ]
+    ]
+  },
+  {
+    "title": "Teacher cascades control supervision cost",
+    "section": "Mechanism",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "A 4B model generates four responses for initial difficulty filtering.",
+          "Unresolved examples escalate through 9B, 27B, and 122B teachers.",
+          "A verifier checks answer correctness and reasoning consistency before accepting trajectories."
+        ]
+      }
+    ],
+    "note": "级联路由把昂贵 teacher 的调用集中在前级未解样本上。它产生的是相对于当前模型族的难度。第 3.2 节。",
+    "refs": [
+      [
+        "Paper v1",
+        "https://arxiv.org/html/2610.01352v1"
+      ],
+      [
+        "Project",
+        "https://github.com/JackieForest/MMVistaReason/tree/ec3b94644b0a474334ba6c6a9089b32fef806ac2"
+      ]
+    ]
+  },
+  {
+    "title": "Answer-Likelihood Best-of-N",
+    "section": "Mechanism",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "Candidate traces first pass correctness and format checks.",
+          "The teacher scores normalized final-answer log likelihood conditioned on each trace.",
+          "Selection favors a valid trace that strongly supports the answer while controlling answer-length bias."
+        ]
+      }
+    ],
+    "note": "答案概率不是独立的人类推理质量证明。需要关注 verifier 偏差与 teacher 自洽偏好。第 3.2 节。",
+    "refs": [
+      [
+        "Paper v1",
+        "https://arxiv.org/html/2610.01352v1"
+      ],
+      [
+        "Project",
+        "https://github.com/JackieForest/MMVistaReason/tree/ec3b94644b0a474334ba6c6a9089b32fef806ac2"
+      ]
+    ]
+  },
+  {
+    "title": "Published supervision inventory",
+    "section": "Evidence",
+    "blocks": [
+      {
+        "type": "table",
+        "headers": [
+          "Subset",
+          "Teacher",
+          "Samples"
+        ],
+        "rows": [
+          [
+            "MVR-SFT-355K",
+            "Qwen3.5-9B",
+            "354,886"
+          ],
+          [
+            "MVR-SFT-124K",
+            "Qwen3.5-27B",
+            "124,010"
+          ],
+          [
+            "MVR-SFT-49K",
+            "Qwen3.5-122B",
+            "48,913"
+          ],
+          [
+            "Combined SFT",
+            "Cascade",
+            "527,809"
+          ]
+        ]
+      }
+    ],
+    "note": "表 1：总量约 1.04B response tokens。样本量与 token 成本都应记录，不能只比较条数。",
+    "refs": [
+      [
+        "Paper v1",
+        "https://arxiv.org/html/2610.01352v1"
+      ],
+      [
+        "Project",
+        "https://github.com/JackieForest/MMVistaReason/tree/ec3b94644b0a474334ba6c6a9089b32fef806ac2"
+      ]
+    ]
+  },
+  {
+    "title": "RL prompts follow each model’s frontier",
+    "section": "Mechanism",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "The corresponding SFT model produces eight rollouts per answer-verifiable prompt.",
+          "Scale-specific pass-rate intervals keep inconsistently solvable prompts.",
+          "Analytical and real-world subsets train separate GSPO experts from the SFT initialization."
+        ]
+      }
+    ],
+    "note": "4B 与 9B 不共享一个固定难度阈值。训练策略改变后，应重新测 pass rate，而不是永久贴上 hard 标签。第 3.2–3.3 节。",
+    "refs": [
+      [
+        "Paper v1",
+        "https://arxiv.org/html/2610.01352v1"
+      ],
+      [
+        "Project",
+        "https://github.com/JackieForest/MMVistaReason/tree/ec3b94644b0a474334ba6c6a9089b32fef806ac2"
+      ]
+    ]
+  },
+  {
+    "title": "Multi-teacher on-policy distillation",
+    "section": "Mechanism",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "The student generates trajectories and receives domain-routed expert supervision.",
+          "Teacher top-32 distributions supervise the student’s own rollout positions.",
+          "The paper finds preferred KL direction varies with model scale."
+        ]
+      }
+    ],
+    "note": "MOPD 融合 expert 的能力。不要把它描述为直接合并权重或简单拼接离线 teacher traces。第 3.3 与 4.4 节。",
+    "refs": [
+      [
+        "Paper v1",
+        "https://arxiv.org/html/2610.01352v1"
+      ],
+      [
+        "Project",
+        "https://github.com/JackieForest/MMVistaReason/tree/ec3b94644b0a474334ba6c6a9089b32fef806ac2"
+      ]
+    ]
+  },
+  {
+    "title": "Reported evaluation scope",
+    "section": "Evidence",
+    "blocks": [
+      {
+        "type": "table",
+        "headers": [
+          "Element",
+          "Reported configuration"
+        ],
+        "rows": [
+          [
+            "Benchmarks",
+            "15 visual reasoning benchmarks"
+          ],
+          [
+            "Decoding",
+            "Greedy, maximum 16,384 generated tokens"
+          ],
+          [
+            "MVR-4B",
+            "72.8 overall average"
+          ],
+          [
+            "MVR-9B",
+            "74.4 overall average"
+          ]
+        ]
+      }
+    ],
+    "note": "第 4 节报告值。总体平均由具体任务组成决定，不构成任意生产任务上的质量保证。",
+    "refs": [
+      [
+        "Paper v1",
+        "https://arxiv.org/html/2610.01352v1"
+      ],
+      [
+        "Project",
+        "https://github.com/JackieForest/MMVistaReason/tree/ec3b94644b0a474334ba6c6a9089b32fef806ac2"
+      ]
+    ]
+  },
+  {
+    "title": "Comparisons require matched supervision",
+    "section": "Limits",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "The authors compare Qwen3.5 Instruct and MMFineReason variants.",
+          "Smaller students benefit more from selected supervision in the reported analyses.",
+          "Mixed-domain RL can hurt individual benchmarks even when the overall average rises."
+        ]
+      }
+    ],
+    "note": "训练数据规模、token 长度、teacher 成本和评测集合均影响比较。70% fewer samples 是相对特定 MMFineReason 设置。",
+    "refs": [
+      [
+        "Paper v1",
+        "https://arxiv.org/html/2610.01352v1"
+      ],
+      [
+        "Project",
+        "https://github.com/JackieForest/MMVistaReason/tree/ec3b94644b0a474334ba6c6a9089b32fef806ac2"
+      ]
+    ]
+  },
+  {
+    "title": "Data platform architecture implications",
+    "section": "Applications",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "Inference: store source, cleaning recipe, verifier result, and teacher escalation path per sample.",
+          "Proposed application: maintain pass-rate snapshots keyed by student checkpoint.",
+          "Proposed application: audit domain mixtures and specialist regressions before distillation promotion."
+        ]
+      }
+    ],
+    "note": "把难度与模型 checkpoint 关联后才能复现 frontier filtering。代码项目存在，但本 deck 不声称已审计或跑通其训练实现。",
+    "refs": [
+      [
+        "Paper v1",
+        "https://arxiv.org/html/2610.01352v1"
+      ],
+      [
+        "Project",
+        "https://github.com/JackieForest/MMVistaReason/tree/ec3b94644b0a474334ba6c6a9089b32fef806ac2"
+      ]
+    ]
+  },
+  {
+    "title": "Reproduction and adoption gates",
+    "section": "Reproduction",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "Pin v1 datasets, model checkpoints, and recipe versions before selecting a subset.",
+          "Compare SFT, mixed RL, separate experts, and MOPD under a common evaluation harness.",
+          "Report per-domain regressions and total teacher/verifier tokens as well as average scores."
+        ]
+      }
+    ],
+    "note": "先在小规模上复核负迁移和蒸馏收益。版本变更应单列差异，不把 v2 当作 v1 的静默替换。",
+    "refs": [
+      [
+        "Paper v1",
+        "https://arxiv.org/html/2610.01352v1"
+      ],
+      [
+        "Project",
+        "https://github.com/JackieForest/MMVistaReason/tree/ec3b94644b0a474334ba6c6a9089b32fef806ac2"
+      ]
+    ]
+  }
+]

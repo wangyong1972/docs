@@ -1,0 +1,15 @@
+{
+  "slug": "multimodal-spectrum",
+  "title": "Multi-modal Data Spectrum",
+  "week": "2026-10-09",
+  "refs": [
+    [
+      "Paper v2",
+      "https://arxiv.org/html/2509.23499v2"
+    ],
+    [
+      "Code",
+      "https://github.com/divyam3897/multimodal-spectrum"
+    ]
+  ]
+}

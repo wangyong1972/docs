@@ -1,0 +1,388 @@
+[
+  {
+    "title": "Iceberg FILE and VECTOR",
+    "section": "Context",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "Proposal review for multimodal lakehouse architecture",
+          "GitHub status checked October 23, 2026",
+          "API, table semantics, and physical encoding have separate readiness boundaries"
+        ]
+      }
+    ],
+    "note": "这组内容是设计提案与 PR，不是论文，也不是已稳定发版的能力。",
+    "refs": [
+      [
+        "FILE PR",
+        "https://github.com/apache/iceberg/pull/18252"
+      ],
+      [
+        "Iceberg VECTOR",
+        "https://github.com/apache/iceberg/issues/18297"
+      ],
+      [
+        "Parquet draft",
+        "https://github.com/apache/parquet-format/pull/592"
+      ]
+    ]
+  },
+  {
+    "title": "Verified proposal status",
+    "section": "Context",
+    "blocks": [
+      {
+        "type": "table",
+        "headers": [
+          "Item",
+          "State on review date",
+          "Scope"
+        ],
+        "rows": [
+          [
+            "Iceberg #18252",
+            "Open, not draft, not merged",
+            "FILE API and initial visitors"
+          ],
+          [
+            "Iceberg #18297",
+            "Open issue",
+            "Fixed-size numeric vector proposal"
+          ],
+          [
+            "Parquet #592",
+            "Open draft, not merged",
+            "VECTOR logical and repetition types"
+          ]
+        ]
+      }
+    ],
+    "note": "API 响应核查显示三者均未形成稳定产品承诺。状态以后会变化，日期是本次快照。",
+    "refs": [
+      [
+        "FILE PR",
+        "https://github.com/apache/iceberg/pull/18252"
+      ],
+      [
+        "Iceberg VECTOR",
+        "https://github.com/apache/iceberg/issues/18297"
+      ],
+      [
+        "Parquet draft",
+        "https://github.com/apache/parquet-format/pull/592"
+      ]
+    ]
+  },
+  {
+    "title": "FILE represents a byte range",
+    "section": "Mechanism",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "The proposed FILE type can reference bytes inline or in an external file.",
+          "It defines a distinct nested type and TypeID instead of inheriting struct semantics.",
+          "The submitted API change forms one part of a broader FILE support sequence."
+        ]
+      }
+    ],
+    "note": "读取图片或音视频片段需要字节范围的结构语义。API 类型存在并不代表所有 engine 的读写、GC 和权限已经实现。",
+    "refs": [
+      [
+        "FILE PR",
+        "https://github.com/apache/iceberg/pull/18252"
+      ],
+      [
+        "Iceberg VECTOR",
+        "https://github.com/apache/iceberg/issues/18297"
+      ],
+      [
+        "Parquet draft",
+        "https://github.com/apache/parquet-format/pull/592"
+      ]
+    ]
+  },
+  {
+    "title": "Derived nested field IDs protect schema evolution",
+    "section": "Mechanism",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "Six nested fields derive their IDs from the containing FILE field ID.",
+          "ID assignment reserves the derived block against future columns.",
+          "Visitors receive dedicated FILE handling with a default struct fallback where appropriate."
+        ]
+      }
+    ],
+    "note": "类型系统必须防止 schema evolution 与内部字段 ID 冲突。普通 struct visitor 的兼容回退也需要逐个检查语义。",
+    "refs": [
+      [
+        "FILE PR",
+        "https://github.com/apache/iceberg/pull/18252"
+      ],
+      [
+        "Iceberg VECTOR",
+        "https://github.com/apache/iceberg/issues/18297"
+      ],
+      [
+        "Parquet draft",
+        "https://github.com/apache/parquet-format/pull/592"
+      ]
+    ]
+  },
+  {
+    "title": "Version gating constrains rollout",
+    "section": "Mechanism",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "The FILE PR gates the proposed type to format version 4.",
+          "Older table versions cannot silently acquire the new semantics.",
+          "Reader, writer, schema evolution, and table upgrade support need independent verification."
+        ]
+      }
+    ],
+    "note": "版本门槛保护兼容性。不能因为格式规范拟新增一个类型就宣称现有 Spark/Trino 环境均可使用。",
+    "refs": [
+      [
+        "FILE PR",
+        "https://github.com/apache/iceberg/pull/18252"
+      ],
+      [
+        "Iceberg VECTOR",
+        "https://github.com/apache/iceberg/issues/18297"
+      ],
+      [
+        "Parquet draft",
+        "https://github.com/apache/parquet-format/pull/592"
+      ]
+    ]
+  },
+  {
+    "title": "Iceberg VECTOR specifies shape intent",
+    "section": "Mechanism",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "The issue proposes a primitive fixed-size numeric vector type.",
+          "Embedding dimension belongs in schema semantics rather than only application conventions.",
+          "The current Iceberg issue points to Parquet proposal #624."
+        ]
+      }
+    ],
+    "note": "重要修正：给定阅读列表中的 Parquet #592 并非 issue 当前指向的唯一方案。不要把两个提案当成已经达成一致的最终规范。",
+    "refs": [
+      [
+        "FILE PR",
+        "https://github.com/apache/iceberg/pull/18252"
+      ],
+      [
+        "Iceberg VECTOR",
+        "https://github.com/apache/iceberg/issues/18297"
+      ],
+      [
+        "Parquet draft",
+        "https://github.com/apache/parquet-format/pull/592"
+      ]
+    ]
+  },
+  {
+    "title": "Parquet #592 changes repetition semantics",
+    "section": "Mechanism",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "The draft adds a VECTOR logical type and VECTOR repetition type.",
+          "SchemaElement.vector_length fixes the number of element slots per vector occurrence.",
+          "The VECTOR repetition level adds no definition or repetition level of its own."
+        ]
+      }
+    ],
+    "note": "这是物理编码层面的新语义，不能把普通 LIST 写入后仅更名就当作兼容实现。",
+    "refs": [
+      [
+        "FILE PR",
+        "https://github.com/apache/iceberg/pull/18252"
+      ],
+      [
+        "Iceberg VECTOR",
+        "https://github.com/apache/iceberg/issues/18297"
+      ],
+      [
+        "Parquet draft",
+        "https://github.com/apache/parquet-format/pull/592"
+      ]
+    ]
+  },
+  {
+    "title": "Nullability and reader behavior in #592",
+    "section": "Evidence",
+    "blocks": [
+      {
+        "type": "table",
+        "headers": [
+          "Aspect",
+          "Draft semantics"
+        ],
+        "rows": [
+          [
+            "Nullable vector",
+            "Optional outer group"
+          ],
+          [
+            "Nullable elements",
+            "Optional element field"
+          ],
+          [
+            "Statistics and encodings",
+            "Remain element-level"
+          ],
+          [
+            "Unsupported readers",
+            "Reject the VECTOR repetition type"
+          ],
+          [
+            "Page boundary",
+            "Writers should keep one vector within a data page"
+          ]
+        ]
+      }
+    ],
+    "note": "这些是 #592 草案的具体选择，不保证最终标准采纳。兼容性测试需覆盖 null vector、null element、空值与页边界。",
+    "refs": [
+      [
+        "FILE PR",
+        "https://github.com/apache/iceberg/pull/18252"
+      ],
+      [
+        "Iceberg VECTOR",
+        "https://github.com/apache/iceberg/issues/18297"
+      ],
+      [
+        "Parquet draft",
+        "https://github.com/apache/parquet-format/pull/592"
+      ]
+    ]
+  },
+  {
+    "title": "Prototypes provide limited performance evidence",
+    "section": "Limits",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "The draft links alternative Arrow prototypes and an Arrow Go proof of concept.",
+          "Microbenchmarks motivate avoiding variable-list machinery for fixed shapes.",
+          "No integrated Iceberg multi-engine production benchmark appears in these proposal bodies."
+        ]
+      }
+    ],
+    "note": "本 deck 不将提案链接中的微基准扩写为端到端训练吞吐增益，也没有执行任何原型。",
+    "refs": [
+      [
+        "FILE PR",
+        "https://github.com/apache/iceberg/pull/18252"
+      ],
+      [
+        "Iceberg VECTOR",
+        "https://github.com/apache/iceberg/issues/18297"
+      ],
+      [
+        "Parquet draft",
+        "https://github.com/apache/parquet-format/pull/592"
+      ]
+    ]
+  },
+  {
+    "title": "Storage types leave indexing policy open",
+    "section": "Applications",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "Inference: a vector field still needs model version and distance-metric metadata.",
+          "Inference: FILE references need lifecycle rules that protect external objects across snapshots.",
+          "Proposed application: keep logical schema adoption separate from ANN index publication."
+        ]
+      }
+    ],
+    "note": "类型支持不自动提供 ANN、跨表事务或外部文件垃圾回收。以上是工程设计要求，不是 PR 已交付内容。",
+    "refs": [
+      [
+        "FILE PR",
+        "https://github.com/apache/iceberg/pull/18252"
+      ],
+      [
+        "Iceberg VECTOR",
+        "https://github.com/apache/iceberg/issues/18297"
+      ],
+      [
+        "Parquet draft",
+        "https://github.com/apache/parquet-format/pull/592"
+      ]
+    ]
+  },
+  {
+    "title": "A compatibility-first evaluation matrix",
+    "section": "Reproduction",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "Test round trips across intended writers and readers at exact version pins.",
+          "Test dimension mismatch, nulls, nested fields, field-ID evolution, and unsupported readers.",
+          "For FILE, test overwrite, snapshot retention, external authorization, and orphan cleanup."
+        ]
+      }
+    ],
+    "note": "可以先在隔离样例数据上验证格式能力，避免升级真实训练表后才发现某个 engine 无法读取。",
+    "refs": [
+      [
+        "FILE PR",
+        "https://github.com/apache/iceberg/pull/18252"
+      ],
+      [
+        "Iceberg VECTOR",
+        "https://github.com/apache/iceberg/issues/18297"
+      ],
+      [
+        "Parquet draft",
+        "https://github.com/apache/parquet-format/pull/592"
+      ]
+    ]
+  },
+  {
+    "title": "Adoption boundary",
+    "section": "Implications",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "Published state: FILE API work and VECTOR proposals remain open.",
+          "Inference: the main risk lies in coordinated format and engine support.",
+          "Proposed gate: wait for agreed spec and supported releases before production schema migration."
+        ]
+      }
+    ],
+    "note": "关注 Apache 评审、最终规范、release note 和跨引擎测试四条证据线。静态阅读与状态核查不等于集成验证。",
+    "refs": [
+      [
+        "FILE PR",
+        "https://github.com/apache/iceberg/pull/18252"
+      ],
+      [
+        "Iceberg VECTOR",
+        "https://github.com/apache/iceberg/issues/18297"
+      ],
+      [
+        "Parquet draft",
+        "https://github.com/apache/parquet-format/pull/592"
+      ]
+    ]
+  }
+]

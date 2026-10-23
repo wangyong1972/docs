@@ -1,0 +1,140 @@
+[
+  {
+    "slug": "synthetic-group-signals",
+    "title": "Synthetic Data Curation: Group-Level Signals",
+    "week": "2026-10-09",
+    "refs": [
+      [
+        "Paper v1",
+        "https://arxiv.org/html/2610.00779v1"
+      ]
+    ]
+  },
+  {
+    "slug": "mmvistareason",
+    "title": "MMVistaReason: Open Data and Post-Training Recipes",
+    "week": "2026-10-09",
+    "refs": [
+      [
+        "Paper v1",
+        "https://arxiv.org/html/2610.01352v1"
+      ],
+      [
+        "Project",
+        "https://github.com/JackieForest/MMVistaReason"
+      ]
+    ]
+  },
+  {
+    "slug": "iceberg-file-vector",
+    "title": "Iceberg FILE and VECTOR Proposals",
+    "week": "2026-10-09",
+    "refs": [
+      [
+        "FILE PR",
+        "https://github.com/apache/iceberg/pull/18252"
+      ],
+      [
+        "Iceberg VECTOR",
+        "https://github.com/apache/iceberg/issues/18297"
+      ],
+      [
+        "Parquet draft",
+        "https://github.com/apache/parquet-format/pull/592"
+      ]
+    ]
+  },
+  {
+    "slug": "multiscore",
+    "title": "MULTI-SCORE: Zero-Shot Multimodal Retrieval",
+    "week": "2026-10-09",
+    "refs": [
+      [
+        "ACL paper",
+        "https://aclanthology.org/2026.acl-long.930.pdf"
+      ],
+      [
+        "Official implementation",
+        "https://github.com/sourajitcs/multiscore"
+      ]
+    ]
+  },
+  {
+    "slug": "multimodal-spectrum",
+    "title": "Multi-modal Data Spectrum",
+    "week": "2026-10-09",
+    "refs": [
+      [
+        "Paper v2",
+        "https://arxiv.org/html/2509.23499v2"
+      ],
+      [
+        "Code",
+        "https://github.com/divyam3897/multimodal-spectrum"
+      ]
+    ]
+  },
+  {
+    "slug": "spanner-lakehouse-catalog",
+    "title": "Spanner-Powered Lakehouse Runtime Catalog",
+    "week": "2026-10-16",
+    "refs": [
+      [
+        "Engineering blog",
+        "https://cloud.google.com/blog/products/data-analytics/lakehouse-runtime-catalog-powered-by-spanner"
+      ]
+    ]
+  },
+  {
+    "slug": "sieveivf",
+    "title": "SieveIVF: Threshold-Aware IVF Execution",
+    "week": "2026-10-16",
+    "refs": [
+      [
+        "Paper v1",
+        "https://arxiv.org/html/2608.03199v1"
+      ]
+    ]
+  },
+  {
+    "slug": "lancedb-pretraining",
+    "title": "A Practical LLM Pretraining Pipeline with LanceDB",
+    "week": "2026-10-16",
+    "refs": [
+      [
+        "Blog",
+        "https://www.lancedb.com/blog/practical-llm-pretraining"
+      ],
+      [
+        "Example source",
+        "https://github.com/lancedb/training/blob/main/examples/llm_pretraining/README.md"
+      ]
+    ]
+  },
+  {
+    "slug": "omnicapbench",
+    "title": "OmniCapBench: Structured Audio-Visual Evaluation",
+    "week": "2026-10-16",
+    "refs": [
+      [
+        "Paper v1",
+        "https://arxiv.org/html/2610.12458v1"
+      ],
+      [
+        "Project",
+        "https://github.com/Tencent-Hunyuan/OmniCapBench"
+      ]
+    ]
+  },
+  {
+    "slug": "adaframe",
+    "title": "AdaFrame: Adaptive Video Frame Budgeting",
+    "week": "2026-10-16",
+    "refs": [
+      [
+        "Paper v1",
+        "https://arxiv.org/html/2610.19127v1"
+      ]
+    ]
+  }
+]

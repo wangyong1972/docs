@@ -1,0 +1,11 @@
+{
+  "slug": "spanner-lakehouse-catalog",
+  "title": "Spanner-Powered Lakehouse Runtime Catalog",
+  "week": "2026-10-16",
+  "refs": [
+    [
+      "Engineering blog",
+      "https://cloud.google.com/blog/products/data-analytics/lakehouse-runtime-catalog-powered-by-spanner"
+    ]
+  ]
+}

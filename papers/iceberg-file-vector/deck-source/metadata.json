@@ -1,0 +1,19 @@
+{
+  "slug": "iceberg-file-vector",
+  "title": "Iceberg FILE and VECTOR Proposals",
+  "week": "2026-10-09",
+  "refs": [
+    [
+      "FILE PR",
+      "https://github.com/apache/iceberg/pull/18252"
+    ],
+    [
+      "Iceberg VECTOR",
+      "https://github.com/apache/iceberg/issues/18297"
+    ],
+    [
+      "Parquet draft",
+      "https://github.com/apache/parquet-format/pull/592"
+    ]
+  ]
+}

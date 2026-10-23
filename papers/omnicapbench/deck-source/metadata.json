@@ -1,0 +1,15 @@
+{
+  "slug": "omnicapbench",
+  "title": "OmniCapBench: Structured Audio-Visual Evaluation",
+  "week": "2026-10-16",
+  "refs": [
+    [
+      "Paper v1",
+      "https://arxiv.org/html/2610.12458v1"
+    ],
+    [
+      "Project",
+      "https://github.com/Tencent-Hunyuan/OmniCapBench"
+    ]
+  ]
+}

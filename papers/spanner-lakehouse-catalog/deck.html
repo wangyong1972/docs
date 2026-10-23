@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spanner-Powered Lakehouse Runtime Catalog</title>
+  <style>
+    /* =========================================================
+       Theme tokens — both light & dark are fully built.
+       Switch via ⚙ panel (sets data-theme on <html>).
+       ========================================================= */
+    :root {
+      --canvas-w: 1400px;
+      --canvas-h: 900px;
+      --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+      --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+      --font-mono: "SF Mono", Menlo, Consolas, monospace;
+      --transition: 280ms cubic-bezier(.4,.0,.2,1);
+    }
+    [data-theme="dark"] {
+      --bg: #0b0b0d;
+      --bg-elev: #16161a;
+      --bg-card: #1d1d22;
+      --fg: #e6e6ea;
+      --fg-dim: #9a9aa3;
+      --accent: #6aa9ff;
+      --border: #2a2a31;
+      --code-bg: #0f0f12;
+    }
+    [data-theme="light"] {
+      --bg: #fafafa;
+      --bg-elev: #ffffff;
+      --bg-card: #ffffff;
+      --fg: #1a1a1f;
+      --fg-dim: #6b6b75;
+      --accent: #2a6df4;
+      --border: #e3e3e8;
+      --code-bg: #f3f3f6;
+    }
+
+    /* =========================================================
+       Base layout
+       ========================================================= */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-ui);
+      overflow: hidden;
+      height: 100vh;
+    }
+    body { display: flex; }
+
+    /* =========================================================
+       Outline sidebar (left, derived from DOM)
+       ========================================================= */
+    #outline {
+      width: 280px;
+      flex: 0 0 280px;
+      background: var(--bg-elev);
+      border-right: 1px solid var(--border);
+      padding: 24px 16px;
+      overflow-y: auto;
+      font-size: 13px;
+    }
+    #outline h3 {
+      font-family: var(--font-display);
+      font-size: 11px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--fg-dim);
+      margin: 0 8px 12px;
+    }
+    #outline .section-group { margin-bottom: 14px; }
+    #outline .section-name {
+      font-weight: 600;
+      color: var(--fg);
+      padding: 6px 8px;
+      font-size: 12px;
+      letter-spacing: .04em;
+    }
+    #outline ol { list-style: none; margin: 0; padding: 0; }
+    #outline li {
+      padding: 4px 8px 4px 24px;
+      color: var(--fg-dim);
+      cursor: pointer;
+      border-radius: 4px;
+      line-height: 1.4;
+    }
+    #outline li:hover { background: var(--bg-card); color: var(--fg); }
+    #outline li.active { color: var(--accent); background: var(--bg-card); }
+
+    /* =========================================================
+       Stage (right, hosts the 1400×900 canvas)
+       ========================================================= */
+    #stage-wrap {
+      flex: 1 1 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      min-width: 0;
+      height: 100vh;
+      overflow: hidden;
+      background: var(--bg);
+    }
+    #stage {
+      position: relative;
+      width: var(--canvas-w);
+      height: var(--canvas-h);
+      background: var(--bg-elev);
+      box-shadow: 0 8px 30px rgba(0,0,0,.25);
+      overflow: hidden;
+      transform-origin: center center;
+      transition: transform 100ms ease-out;
+      flex-shrink: 0;
+    }
+
+    /* =========================================================
+       Slides
+       ========================================================= */
+    .slide {
+      position: absolute; inset: 0;
+      padding: 80px 90px;
+      display: none;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 28px;
+    }
+    .slide.active { display: flex; }
+    .slide h1 {
+      font-family: var(--font-display);
+      font-size: 56px;
+      line-height: 1.15;
+      margin: 0;
+      letter-spacing: -.01em;
+    }
+    .slide h2 {
+      font-family: var(--font-display);
+      font-size: 36px;
+      line-height: 1.2;
+      margin: 0;
+      letter-spacing: -.005em;
+    }
+    .slide h3 {
+      font-family: var(--font-display);
+      font-size: 22px;
+      margin: 0 0 6px;
+      color: var(--fg-dim);
+    }
+    .slide p { font-size: 22px; line-height: 1.55; margin: 0; }
+    .slide ul, .slide ol { font-size: 22px; line-height: 1.7; margin: 0; padding-left: 28px; }
+    .slide li { margin-bottom: 6px; }
+    .slide .lede { font-size: 28px; color: var(--fg-dim); }
+    .slide .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 28px;
+    }
+    .slide pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px 24px;
+      font-family: var(--font-mono);
+      font-size: 16px;
+      line-height: 1.5;
+      overflow: auto;
+      max-height: 100%;
+    }
+    .slide code { font-family: var(--font-mono); }
+    .slide .pill {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      font-size: 14px;
+      color: var(--fg-dim);
+      margin-right: 8px;
+    }
+    .slide .cols-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+    .slide .cols-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+
+    /* =========================================================
+       Toolbar (top-right of stage)
+       ========================================================= */
+    #toolbar {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: flex;
+      gap: 6px;
+      z-index: 10;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 4px;
+    }
+    #toolbar button {
+      background: transparent;
+      border: 0;
+      color: var(--fg);
+      width: 34px; height: 34px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #toolbar button:hover { background: var(--bg-elev); }
+    #toolbar button.active { background: var(--accent); color: white; }
+
+    /* =========================================================
+       Status bar (bottom-right, slide counter + progress)
+       ========================================================= */
+    #statusbar {
+      position: absolute;
+      bottom: 16px; right: 24px;
+      font-size: 13px;
+      color: var(--fg-dim);
+      font-family: var(--font-mono);
+      z-index: 5;
+    }
+    #progress {
+      position: absolute;
+      bottom: 0; left: 0;
+      height: 3px;
+      background: var(--accent);
+      transition: width var(--transition);
+    }
+
+    /* =========================================================
+       Laser pointer (hidden until toggled)
+       ========================================================= */
+    #laser {
+      position: fixed;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: #ff3b30;
+      box-shadow: 0 0 10px rgba(255,59,48,.8);
+      pointer-events: none;
+      display: none;
+      z-index: 1000;
+      transform: translate(-50%, -50%);
+    }
+
+    /* =========================================================
+       Settings modal
+       ========================================================= */
+    #settings-modal {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+    #settings-modal.open { display: flex; }
+    #settings-modal .panel {
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px 32px;
+      width: 420px;
+    }
+    #settings-modal h2 {
+      margin: 0 0 20px;
+      font-family: var(--font-display);
+      font-size: 20px;
+    }
+    #settings-modal label {
+      display: block;
+      margin: 14px 0 4px;
+      font-size: 13px;
+      color: var(--fg-dim);
+    }
+    #settings-modal select {
+      width: 100%;
+      padding: 8px 10px;
+      background: var(--bg-card);
+      color: var(--fg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    /* =========================================================
+       Print (PDF export) — one slide per page, hide chrome
+       ========================================================= */
+    @media print {
+      body { overflow: visible; height: auto; }
+      #outline, #toolbar, #statusbar, #progress, #laser, #settings-modal { display: none !important; }
+      #stage-wrap { display: block; }
+      #stage {
+        transform: none !important;
+        box-shadow: none;
+        page-break-after: always;
+        break-after: page;
+      }
+      .slide { display: flex !important; position: relative; inset: auto; }
+      /* only show the active slide during print, then advance via window.print slicing in JS */
+    }
+
+.slide {padding:58px 72px 54px; gap:22px;}
+.slide h2 {font-size:40px; max-width:1150px;}
+.slide p,.slide ul,.slide ol {font-size:25px;line-height:1.48;}
+.slide li {margin-bottom:12px;}
+.slide .lede {font-size:28px;color:var(--fg);}
+.slide pre {font-size:20px;line-height:1.42;padding:20px 24px;border-radius:0;flex-shrink:0;overflow:hidden;}
+.slide table {border-collapse:collapse;width:100%;font-size:22px;line-height:1.38;}
+.slide th,.slide td {text-align:left;vertical-align:top;border-bottom:1px solid var(--border);padding:12px 14px;}
+.slide th {color:var(--accent);font-weight:600;}
+.slide code {color:var(--accent);font-family:var(--font-mono);}
+.slide pre code {color:var(--fg);}
+.slide .notes {font-size:20px;line-height:1.5;color:var(--fg-dim);border-left:3px solid var(--accent);padding-left:17px;margin-top:auto;}
+.slide .sources {font-size:15px;line-height:1.5;min-height:34px;}
+.sources a {color:var(--accent);text-decoration:none;margin-right:14px;}
+@media print {
+ @page {size:1400px 900px;margin:0;}
+ html,body {display:block!important;width:1400px!important;height:auto!important;overflow:visible!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+ #stage-wrap,#stage {display:block!important;width:1400px!important;height:auto!important;overflow:visible!important;transform:none!important;break-after:auto!important;}
+ .slide {width:1400px!important;height:900px!important;display:flex!important;position:relative!important;break-after:page;page-break-after:always;overflow:hidden!important;}
+ .slide:last-child {break-after:auto;page-break-after:auto;}
+ #pdf-modal,#modeSwitcher {display:none!important;}
+}
+
+</style>
+</head>
+<body>
+
+  <!-- =================== Outline sidebar =================== -->
+  <nav id="outline" aria-label="Outline">
+    <h3>Outline</h3>
+    <div id="outline-tree"><!-- derived from DOM by JS --></div>
+  </nav>
+
+  <!-- =================== Stage =================== -->
+  <div id="stage-wrap">
+    <div id="stage">
+
+      <!-- Toolbar -->
+      <div id="toolbar">
+        <button id="btn-outline" title="Toggle outline (o)">☰</button>
+        <button id="btn-laser" title="Laser pointer (l)">●</button>
+        <button id="btn-fullscreen" title="Fullscreen (f)">⛶</button>
+        <button id="btn-pdf" title="Export PDF (p)">📄</button>
+        <button id="btn-settings" title="Settings (s)">⚙</button>
+      </div>
+
+      <!-- Status + progress -->
+      <div id="statusbar"><span id="slideCounter">1 / 1</span></div>
+      <div id="progress" style="width: 0%"></div>
+
+<section class="slide active" data-deck="v1" data-section="Context" data-title="Spanner-powered Lakehouse runtime catalog"><h2>Spanner-powered Lakehouse runtime catalog</h2><ul><li>Managed Apache Iceberg at scale</li><li>Google Cloud engineering blog, October 6, 2026</li><li>Control-plane consistency and availability for a shared lakehouse</li></ul><aside class="notes" lang="zh">这是厂商工程博客。架构解释有参考价值，但没有独立论文式对照实验或可复现 catalog 实现。</aside><footer class="sources"><a href="https://cloud.google.com/blog/products/data-analytics/lakehouse-runtime-catalog-powered-by-spanner" target="_blank" rel="noopener">Engineering blog</a></footer></section>
+<section class="slide " data-deck="v1" data-section="Context" data-title="The catalog lies on the query path"><h2>The catalog lies on the query path</h2><ul><li>The Iceberg REST catalog resolves table metadata locations.</li><li>Writers require an atomic metadata-pointer update under optimistic concurrency.</li><li>A catalog outage can stop otherwise healthy query engines and object storage.</li></ul><aside class="notes" lang="zh">catalog 是控制平面的关键依赖。数据文件仍在对象存储，不能把 metadata DB 与数据扫描层混为一谈。</aside><footer class="sources"><a href="https://cloud.google.com/blog/products/data-analytics/lakehouse-runtime-catalog-powered-by-spanner" target="_blank" rel="noopener">Engineering blog</a></footer></section>
+<section class="slide " data-deck="v1" data-section="Mechanism" data-title="Commit coordination needs compare-and-swap"><h2>Commit coordination needs compare-and-swap</h2><ul><li>A writer prepares metadata based on the observed current table version.</li><li>The catalog must atomically validate the expected pointer and publish the replacement.</li><li>Concurrent updates need conflict handling rather than a blind last-writer-wins overwrite.</li></ul><aside class="notes" lang="zh">博客明确强调 CAS。这里是协议级机制说明，文章没有披露内部 schema 或每个 RPC 的实现。</aside><footer class="sources"><a href="https://cloud.google.com/blog/products/data-analytics/lakehouse-runtime-catalog-powered-by-spanner" target="_blank" rel="noopener">Engineering blog</a></footer></section>
+<section class="slide " data-deck="v1" data-section="Mechanism" data-title="Spanner backs catalog state"><h2>Spanner backs catalog state</h2><ul><li>The blog attributes strong consistency and scalable metadata state to Spanner.</li><li>Relational SQL and multi-table ACID transactions provide the backing primitives.</li><li>Dynamic range splitting and movement address storage and load growth.</li></ul><aside class="notes" lang="zh">这些是 backing database 能力。具体 table-key 设计、缓存策略、热点缓解细节在文章中没有公开。</aside><footer class="sources"><a href="https://cloud.google.com/blog/products/data-analytics/lakehouse-runtime-catalog-powered-by-spanner" target="_blank" rel="noopener">Engineering blog</a></footer></section>
+<section class="slide " data-deck="v1" data-section="Mechanism" data-title="Availability claims have a configuration scope"><h2>Availability claims have a configuration scope</h2><ul><li>The blog cites regional Spanner configurations with up to 99.99% availability.</li><li>Cloud Storage dual-region and multi-region buckets support failover use cases.</li><li>Catalog availability and complete query availability depend on additional services and configuration.</li></ul><aside class="notes" lang="zh">不要把数据库配置可达的可用性直接作为所有 end-to-end query 的 SLA。需要查实际产品合同及依赖。</aside><footer class="sources"><a href="https://cloud.google.com/blog/products/data-analytics/lakehouse-runtime-catalog-powered-by-spanner" target="_blank" rel="noopener">Engineering blog</a></footer></section>
+<section class="slide " data-deck="v1" data-section="Mechanism" data-title="Open REST interfaces decouple compute"><h2>Open REST interfaces decouple compute</h2><ul><li>The runtime catalog implements the Iceberg REST Catalog specification.</li><li>BigQuery, managed Spark, and compatible open-source engines discover registered tables.</li><li>Pointers reference existing underlying data, avoiding a mandatory data rewrite for registration.</li></ul><aside class="notes" lang="zh">接口兼容不意味着任意引擎版本支持所有写入特性。迁移时仍需验证 schema、权限和表格式版本。</aside><footer class="sources"><a href="https://cloud.google.com/blog/products/data-analytics/lakehouse-runtime-catalog-powered-by-spanner" target="_blank" rel="noopener">Engineering blog</a></footer></section>
+<section class="slide " data-deck="v1" data-section="Mechanism" data-title="Credential vending narrows storage access"><h2>Credential vending narrows storage access</h2><ul><li>The catalog can vend short-lived storage credentials.</li><li>OAuth/OIDC and IAM integration separate identity from broad object-store permissions.</li><li>Federation connects catalogs and storage across cloud boundaries.</li></ul><aside class="notes" lang="zh">外部 catalog、凭证交换和实际对象存储授权是多层链路。建议测试过期、撤权、租户隔离与审计。</aside><footer class="sources"><a href="https://cloud.google.com/blog/products/data-analytics/lakehouse-runtime-catalog-powered-by-spanner" target="_blank" rel="noopener">Engineering blog</a></footer></section>
+<section class="slide " data-deck="v1" data-section="Mechanism" data-title="Knowledge Catalog adds discovery indexes"><h2>Knowledge Catalog adds discovery indexes</h2><ul><li>The blog describes full-text and vector search over a common base dataset in Spanner.</li><li>It claims transactional index updates alongside base-table DML.</li><li>This supports metadata discovery and contextual retrieval for agents.</li></ul><aside class="notes" lang="zh">这里的 base dataset 是该索引所在的数据语义。不能推断外部所有 Iceberg 数据文件与 Spanner 索引构成同一个分布式事务。</aside><footer class="sources"><a href="https://cloud.google.com/blog/products/data-analytics/lakehouse-runtime-catalog-powered-by-spanner" target="_blank" rel="noopener">Engineering blog</a></footer></section>
+<section class="slide " data-deck="v1" data-section="Mechanism" data-title="Maintenance remains a distinct responsibility"><h2>Maintenance remains a distinct responsibility</h2><ul><li>Catalog state alone does not compact files or expire snapshots.</li><li>Manifest rewriting and orphan cleanup need coordinated maintenance workflows.</li><li>Retention rules must protect readers and historical snapshots during cleanup.</li></ul><aside class="notes" lang="zh">博客把 maintenance coordination 列为痛点，但未提供完整调度器或 GC 算法。以上边界应在选型时问清。</aside><footer class="sources"><a href="https://cloud.google.com/blog/products/data-analytics/lakehouse-runtime-catalog-powered-by-spanner" target="_blank" rel="noopener">Engineering blog</a></footer></section>
+<section class="slide " data-deck="v1" data-section="Limits" data-title="Evidence and missing baselines"><h2>Evidence and missing baselines</h2><table><thead><tr><th>Published evidence</th><th>Interpretation</th></tr></thead><tbody><tr><td>Product described as GA</td><td>Availability statement on October 6 blog</td></tr><tr><td>Etsy 60% pipeline acceleration</td><td>Customer example with workload-specific context</td></tr><tr><td>Spanner consistency and scaling</td><td>Architectural motivation</td></tr><tr><td>No catalog QPS/latency comparison</td><td>No independent performance frontier in this article</td></tr></tbody></table><aside class="notes" lang="zh">不能将客户流水线加速拆解为 catalog 单独提升 60%。博客没有给出消融和统一基线。</aside><footer class="sources"><a href="https://cloud.google.com/blog/products/data-analytics/lakehouse-runtime-catalog-powered-by-spanner" target="_blank" rel="noopener">Engineering blog</a></footer></section>
+<section class="slide " data-deck="v1" data-section="Applications" data-title="Architecture evaluation proposal"><h2>Architecture evaluation proposal</h2><ul><li>Proposed test: race conflicting commits and verify reader-visible snapshot transitions.</li><li>Proposed test: measure catalog p50/p99 and retry rate under metadata-heavy traffic.</li><li>Proposed test: exercise credential expiry, failover, and cleanup with active readers.</li></ul><aside class="notes" lang="zh">这是面向 AI 数据平台的验证清单，尚未执行。应把 catalog 延迟与对象扫描延迟分别观测。</aside><footer class="sources"><a href="https://cloud.google.com/blog/products/data-analytics/lakehouse-runtime-catalog-powered-by-spanner" target="_blank" rel="noopener">Engineering blog</a></footer></section>
+<section class="slide " data-deck="v1" data-section="Reproduction" data-title="Adoption and reproducibility boundary"><h2>Adoption and reproducibility boundary</h2><ul><li>Inference: a managed consistent catalog can reduce control-plane operations work.</li><li>A product trial must verify actual region, permissions, engine versions, and cost model.</li><li>No open implementation or benchmark reproduction accompanies the reviewed blog.</li></ul><aside class="notes" lang="zh">可用标准 REST 客户端设计黑盒实验，不能把文章当成已经复现的内部实现。</aside><footer class="sources"><a href="https://cloud.google.com/blog/products/data-analytics/lakehouse-runtime-catalog-powered-by-spanner" target="_blank" rel="noopener">Engineering blog</a></footer></section>
+
+
+    </div>
+  </div>
+
+  <!-- =================== Settings modal =================== -->
+  <div id="settings-modal" role="dialog" aria-label="Settings">
+    <div class="panel">
+      <h2>Settings</h2>
+      <label for="theme-select">Theme</label>
+      <select id="theme-select">
+        <option value="dark">Dark</option>
+        <option value="light">Light</option>
+      </select>
+      <label for="font-select">Font</label>
+      <select id="font-select">
+        <option value="SF Pro">SF Pro</option>
+        <option value="Helvetica">Helvetica</option>
+        <option value="Avenir">Avenir</option>
+        <option value="Georgia">Georgia</option>
+        <option value="Menlo">Menlo</option>
+      </select>
+      <label for="transition-select">Transition</label>
+      <select id="transition-select">
+        <option value="fade">Fade</option>
+        <option value="slide-left">Slide left</option>
+        <option value="zoom">Zoom</option>
+        <option value="none">None</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- =================== Laser pointer dot =================== -->
+  <div id="laser"></div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    // ---------- Derived outline ----------
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    const tree = document.getElementById('outline-tree');
+    const sections = {};
+    slides.forEach((s, i) => {
+      const sec = s.dataset.section || '(no section)';
+      if (!sections[sec]) sections[sec] = [];
+      sections[sec].push({ idx: i, title: s.dataset.title || `slide ${i + 1}` });
+    });
+    Object.keys(sections).forEach(secName => {
+      const group = document.createElement('div');
+      group.className = 'section-group';
+      const head = document.createElement('div');
+      head.className = 'section-name';
+      head.textContent = secName;
+      group.appendChild(head);
+      const ol = document.createElement('ol');
+      sections[secName].forEach(({ idx, title }) => {
+        const li = document.createElement('li');
+        li.textContent = `${idx + 1}. ${title}`;
+        li.dataset.idx = idx;
+        li.addEventListener('click', () => goTo(idx));
+        ol.appendChild(li);
+      });
+      group.appendChild(ol);
+      tree.appendChild(group);
+    });
+
+    // ---------- Navigation state ----------
+    let current = parseInt(location.hash.replace('#', ''), 10);
+    if (!Number.isFinite(current) || current < 1 || current > slides.length) current = 1;
+    current = current - 1;
+
+    const counter = document.getElementById('slideCounter');
+    const progress = document.getElementById('progress');
+    const outlineItems = () => document.querySelectorAll('#outline li');
+
+    function render() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      counter.textContent = `${current + 1} / ${slides.length}`;
+      progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+      outlineItems().forEach(li => {
+        li.classList.toggle('active', Number(li.dataset.idx) === current);
+      });
+      location.hash = current + 1;
+    }
+
+    function goTo(i) {
+      if (i < 0 || i >= slides.length) return;
+      current = i;
+      render();
+    }
+
+    function next() { goTo(Math.min(current + 1, slides.length - 1)); }
+    function prev() { goTo(Math.max(current - 1, 0)); }
+
+    // ---------- Keyboard ----------
+    document.addEventListener('keydown', e => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+      switch (e.key) {
+        case 'ArrowRight': case 'PageDown': case ' ': next(); e.preventDefault(); break;
+        case 'ArrowLeft':  case 'PageUp':           prev(); e.preventDefault(); break;
+        case 'Home': goTo(0); break;
+        case 'End':  goTo(slides.length - 1); break;
+        case 'o': case 'O': toggleOutline(); break;
+        case 'l': case 'L': toggleLaser(); break;
+        case 'f': case 'F': toggleFullscreen(); break;
+        case 'p': case 'P': exportPdf(); break;
+        case 's': case 'S': openSettings(); break;
+        case 'Escape':
+          document.getElementById('settings-modal').classList.remove('open');
+          break;
+      }
+    });
+
+    // ---------- Dynamic Responsive Auto-Scaling ----------
+    function updateScale() {
+      const wrap = document.getElementById('stage-wrap');
+      const stage = document.getElementById('stage');
+      if (!wrap || !stage) return;
+      const isFullscreen = !!document.fullscreenElement;
+      const padX = isFullscreen ? 0 : 24;
+      const padY = isFullscreen ? 0 : 24;
+      const availW = Math.max(wrap.clientWidth - padX, 200);
+      const availH = Math.max(wrap.clientHeight - padY, 200);
+      const scale = Math.min(availW / 1400, availH / 900);
+      stage.style.transform = `scale(${scale})`;
+    }
+
+    window.addEventListener('resize', updateScale);
+    document.addEventListener('fullscreenchange', updateScale);
+    if (window.ResizeObserver) {
+      new ResizeObserver(() => updateScale()).observe(document.getElementById('stage-wrap'));
+    }
+
+    // ---------- Toolbar ----------
+    function toggleOutline() {
+      const outline = document.getElementById('outline');
+      outline.style.display = outline.style.display === 'none' ? 'block' : 'none';
+      requestAnimationFrame(updateScale);
+    }
+    document.getElementById('btn-outline').addEventListener('click', toggleOutline);
+
+    // ---------- Laser pointer ----------
+    const laser = document.getElementById('laser');
+    let laserOn = false;
+    function toggleLaser() {
+      laserOn = !laserOn;
+      laser.style.display = laserOn ? 'block' : 'none';
+      document.getElementById('btn-laser').classList.toggle('active', laserOn);
+    }
+    document.addEventListener('mousemove', e => {
+      laser.style.left = e.clientX + 'px';
+      laser.style.top  = e.clientY + 'px';
+    });
+    document.getElementById('btn-laser').addEventListener('click', toggleLaser);
+
+    // ---------- Fullscreen ----------
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    }
+    document.getElementById('btn-fullscreen').addEventListener('click', toggleFullscreen);
+
+    // ---------- PDF export (uses browser print) ----------
+    function exportPdf() {
+      // Show all slides during print, then restore.
+      const wasActive = slides.map(s => s.classList.contains('active'));
+      slides.forEach(s => s.classList.add('active'));
+      const onAfter = () => {
+        slides.forEach((s, i) => s.classList.toggle('active', wasActive[i]));
+        window.removeEventListener('afterprint', onAfter);
+      };
+      window.addEventListener('afterprint', onAfter);
+      window.print();
+    }
+    document.getElementById('btn-pdf').addEventListener('click', exportPdf);
+
+    // ---------- Settings ----------
+    const settingsModal = document.getElementById('settings-modal');
+    function openSettings()  { settingsModal.classList.add('open'); }
+    function closeSettings() { settingsModal.classList.remove('open'); }
+    document.getElementById('btn-settings').addEventListener('click', openSettings);
+    settingsModal.addEventListener('click', e => { if (e.target === settingsModal) closeSettings(); });
+
+    const themeSel = document.getElementById('theme-select');
+    const fontSel  = document.getElementById('font-select');
+    const transSel = document.getElementById('transition-select');
+
+    themeSel.value = document.documentElement.dataset.theme || 'dark';
+    themeSel.addEventListener('change', () => {
+      document.documentElement.dataset.theme = themeSel.value;
+      try { localStorage.setItem('deck-theme', themeSel.value); } catch (_) {}
+    });
+    fontSel.addEventListener('change', () => {
+      document.documentElement.style.setProperty('--font-ui', fontFamilyFor(fontSel.value));
+      document.documentElement.style.setProperty('--font-display', fontFamilyFor(fontSel.value));
+    });
+    transSel.addEventListener('change', () => {
+      const t = transSel.value;
+      const map = {
+        'fade':      '280ms cubic-bezier(.4,.0,.2,1)',
+        'slide-left': '320ms cubic-bezier(.4,.0,.2,1)',
+        'zoom':      '280ms cubic-bezier(.4,.0,.2,1)',
+        'none':      '0ms'
+      };
+      document.documentElement.style.setProperty('--transition', map[t]);
+    });
+    function fontFamilyFor(name) {
+      switch (name) {
+        case 'SF Pro':    return '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif';
+        case 'Helvetica': return '"Helvetica Neue", Helvetica, Arial, sans-serif';
+        case 'Avenir':    return 'Avenir, "Avenir Next", -apple-system, sans-serif';
+        case 'Georgia':   return 'Georgia, "Times New Roman", serif';
+        case 'Menlo':     return '"SF Mono", Menlo, Consolas, monospace';
+        default:          return '-apple-system, BlinkMacSystemFont, sans-serif';
+      }
+    }
+
+    // ---------- Restore prefs ----------
+    try {
+      const savedTheme = localStorage.getItem('deck-theme');
+      if (savedTheme) {
+        document.documentElement.dataset.theme = savedTheme;
+        themeSel.value = savedTheme;
+      }
+    } catch (_) {}
+
+    // ---------- Init ----------
+    render();
+    updateScale();
+
+    // Hide outline button reflects state (purely visual)
+    document.getElementById('btn-outline').addEventListener('click', function () {
+      this.classList.toggle('active');
+    });
+  })();
+  </script>
+</body>
+</html>

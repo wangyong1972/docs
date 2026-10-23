@@ -1,0 +1,15 @@
+{
+  "slug": "mmvistareason",
+  "title": "MMVistaReason: Open Data and Post-Training Recipes",
+  "week": "2026-10-09",
+  "refs": [
+    [
+      "Paper v1",
+      "https://arxiv.org/html/2610.01352v1"
+    ],
+    [
+      "Project",
+      "https://github.com/JackieForest/MMVistaReason"
+    ]
+  ]
+}

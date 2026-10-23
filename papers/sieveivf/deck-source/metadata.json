@@ -1,0 +1,11 @@
+{
+  "slug": "sieveivf",
+  "title": "SieveIVF: Threshold-Aware IVF Execution",
+  "week": "2026-10-16",
+  "refs": [
+    [
+      "Paper v1",
+      "https://arxiv.org/html/2608.03199v1"
+    ]
+  ]
+}

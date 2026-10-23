@@ -1,0 +1,102 @@
+[
+  {
+    "url": "https://aclanthology.org/2026.acl-long.930.pdf",
+    "status": 200,
+    "resolved": "https://aclanthology.org/2026.acl-long.930.pdf"
+  },
+  {
+    "url": "https://arxiv.org/html/2509.23499v2",
+    "status": 200,
+    "resolved": "https://arxiv.org/html/2509.23499v2"
+  },
+  {
+    "url": "https://arxiv.org/html/2608.03199v1",
+    "status": 200,
+    "resolved": "https://arxiv.org/html/2608.03199v1"
+  },
+  {
+    "url": "https://arxiv.org/html/2610.00779v1",
+    "status": 200,
+    "resolved": "https://arxiv.org/html/2610.00779v1"
+  },
+  {
+    "url": "https://arxiv.org/html/2610.01352v1",
+    "status": 200,
+    "resolved": "https://arxiv.org/html/2610.01352v1"
+  },
+  {
+    "url": "https://arxiv.org/html/2610.12458v1",
+    "status": 200,
+    "resolved": "https://arxiv.org/html/2610.12458v1"
+  },
+  {
+    "url": "https://arxiv.org/html/2610.19127v1",
+    "status": 200,
+    "resolved": "https://arxiv.org/html/2610.19127v1"
+  },
+  {
+    "url": "https://cloud.google.com/blog/products/data-analytics/lakehouse-runtime-catalog-powered-by-spanner",
+    "status": 200,
+    "resolved": "https://cloud.google.com/blog/products/data-analytics/lakehouse-runtime-catalog-powered-by-spanner"
+  },
+  {
+    "url": "https://github.com/JackieForest/MMVistaReason/tree/ec3b94644b0a474334ba6c6a9089b32fef806ac2",
+    "status": 200,
+    "resolved": "https://github.com/JackieForest/MMVistaReason/tree/ec3b94644b0a474334ba6c6a9089b32fef806ac2"
+  },
+  {
+    "url": "https://github.com/Tencent-Hunyuan/OmniCapBench/tree/24328d3faff0a6f8519fc5072a195edac6f093d1",
+    "status": 200,
+    "resolved": "https://github.com/Tencent-Hunyuan/OmniCapBench/tree/24328d3faff0a6f8519fc5072a195edac6f093d1"
+  },
+  {
+    "url": "https://github.com/apache/iceberg/issues/18297",
+    "status": 200,
+    "resolved": "https://github.com/apache/iceberg/issues/18297"
+  },
+  {
+    "url": "https://github.com/apache/iceberg/pull/18252",
+    "status": 200,
+    "resolved": "https://github.com/apache/iceberg/pull/18252"
+  },
+  {
+    "url": "https://github.com/apache/parquet-format/pull/592",
+    "status": 200,
+    "resolved": "https://github.com/apache/parquet-format/pull/592"
+  },
+  {
+    "url": "https://github.com/divyam3897/multimodal-spectrum/tree/48c61f2a1e41c79f5882cf5857e1df800b702fef",
+    "status": 200,
+    "resolved": "https://github.com/divyam3897/multimodal-spectrum/tree/48c61f2a1e41c79f5882cf5857e1df800b702fef"
+  },
+  {
+    "url": "https://github.com/lancedb/training/blob/5df544f45c5ced4598df3a3278214a66c937d698/examples/llm_pretraining/README.md",
+    "status": 200,
+    "resolved": "https://github.com/lancedb/training/blob/5df544f45c5ced4598df3a3278214a66c937d698/examples/llm_pretraining/README.md"
+  },
+  {
+    "url": "https://github.com/lancedb/training/blob/5df544f45c5ced4598df3a3278214a66c937d698/examples/llm_pretraining/curate.py#L46-L80",
+    "status": 200,
+    "resolved": "https://github.com/lancedb/training/blob/5df544f45c5ced4598df3a3278214a66c937d698/examples/llm_pretraining/curate.py#L46-L80"
+  },
+  {
+    "url": "https://github.com/lancedb/training/blob/5df544f45c5ced4598df3a3278214a66c937d698/examples/llm_pretraining/train.py#L425-L437",
+    "status": 200,
+    "resolved": "https://github.com/lancedb/training/blob/5df544f45c5ced4598df3a3278214a66c937d698/examples/llm_pretraining/train.py#L425-L437"
+  },
+  {
+    "url": "https://github.com/lancedb/training/blob/5df544f45c5ced4598df3a3278214a66c937d698/examples/llm_pretraining/train.py#L467-L500",
+    "status": 200,
+    "resolved": "https://github.com/lancedb/training/blob/5df544f45c5ced4598df3a3278214a66c937d698/examples/llm_pretraining/train.py#L467-L500"
+  },
+  {
+    "url": "https://github.com/sourajitcs/multiscore/tree/0fcaf7bcdee10374aeedf1de8048ebe3325a9831",
+    "status": 200,
+    "resolved": "https://github.com/sourajitcs/multiscore/tree/0fcaf7bcdee10374aeedf1de8048ebe3325a9831"
+  },
+  {
+    "url": "https://www.lancedb.com/blog/practical-llm-pretraining",
+    "status": 200,
+    "resolved": "https://www.lancedb.com/blog/practical-llm-pretraining"
+  }
+]

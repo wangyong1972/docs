@@ -1,0 +1,293 @@
+[
+  {
+    "title": "Synthetic data curation at group granularity",
+    "section": "Context",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "Effective Synthetic Data Curation Requires Group-Level Signals",
+          "Cathy Jiao and Chenyan Xiong, arXiv v1, September 30, 2026",
+          "Technical reading for AI data infrastructure engineering"
+        ]
+      }
+    ],
+    "note": "核心问题：单条样本分数的求和能否代表整组训练价值？本文用受控实验说明二者可能偏离。",
+    "refs": [
+      [
+        "Paper v1",
+        "https://arxiv.org/html/2610.00779v1"
+      ]
+    ]
+  },
+  {
+    "title": "The unit of selection changes the objective",
+    "section": "Context",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "Individual influence estimates a sample’s utility in isolation.",
+          "A group changes the model through multiple interacting optimization steps.",
+          "Synthetic paraphrases share origins and may concentrate training signal despite high individual scores."
+        ]
+      }
+    ],
+    "note": "作者研究训练价值的非加性。不要把 group 简化成按来源分桶后的平均质量分。",
+    "refs": [
+      [
+        "Paper v1",
+        "https://arxiv.org/html/2610.00779v1"
+      ]
+    ]
+  },
+  {
+    "title": "Proxy oracle and group oracle",
+    "section": "Mechanism",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "The proxy aggregates individual sample effects around the reference model.",
+          "The group oracle evaluates the validation-loss change after training on the group.",
+          "Matching proxy scores while varying composition isolates interactions that the additive proxy misses."
+        ]
+      }
+    ],
+    "note": "Oracle 是昂贵的实验参照，不是可直接用于全量生产的免费标签。参见第 2 节与附录 B.1。",
+    "refs": [
+      [
+        "Paper v1",
+        "https://arxiv.org/html/2610.00779v1"
+      ]
+    ]
+  },
+  {
+    "title": "Controlled group construction",
+    "section": "Mechanism",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "BGE embeddings and k-means partition each corpus into 20 semantic clusters.",
+          "Groups span one to 20 clusters while their average individual proxy scores remain matched.",
+          "Gumbel-Top-k sampling selects groups under matched training budgets."
+        ]
+      }
+    ],
+    "note": "既控制平均单样本效用，又改变语义与主题组成，避免仅用更高质量数据解释结果。第 3.2 节。",
+    "refs": [
+      [
+        "Paper v1",
+        "https://arxiv.org/html/2610.00779v1"
+      ]
+    ]
+  },
+  {
+    "title": "Training settings and controls",
+    "section": "Evidence",
+    "blocks": [
+      {
+        "type": "table",
+        "headers": [
+          "Setting",
+          "Model and data",
+          "Control"
+        ],
+        "rows": [
+          [
+            "Continued pretraining",
+            "Repro-400M, synthetic Repro corpus",
+            "Same initialization and optimization"
+          ],
+          [
+            "Post-training",
+            "Qwen2.5-1.5B-Instruct, GooseReason",
+            "Same step count and evaluation"
+          ],
+          [
+            "Selection arms",
+            "Group oracle, proxy oracle, random",
+            "Same candidate pool and budget"
+          ]
+        ]
+      }
+    ],
+    "note": "这里只覆盖 400M/1.5B 文本实验，不是多模态或前沿规模的直接证据。第 3 节。",
+    "refs": [
+      [
+        "Paper v1",
+        "https://arxiv.org/html/2610.00779v1"
+      ]
+    ]
+  },
+  {
+    "title": "Synthetic recycling increases redundancy pressure",
+    "section": "Mechanism",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "The pool contains 716,800 sequences for every rephrase factor.",
+          "Rephrase factors 1, 10, and 50 reduce unique source documents as repetitions rise.",
+          "FineWeb-Edu, BM25, and GradSim represent individual scoring. GMRel and GREATS include relations."
+        ]
+      }
+    ],
+    "note": "r=50 是高合成度压力测试。固定序列总数使来源覆盖度的变化更容易解释。第 4 节。",
+    "refs": [
+      [
+        "Paper v1",
+        "https://arxiv.org/html/2610.00779v1"
+      ]
+    ]
+  },
+  {
+    "title": "Reported average accuracy at r = 10",
+    "section": "Evidence",
+    "blocks": [
+      {
+        "type": "table",
+        "headers": [
+          "Selection",
+          "Average score",
+          "Interpretation"
+        ],
+        "rows": [
+          [
+            "Random",
+            "29.58",
+            "Reference selection"
+          ],
+          [
+            "GradSim",
+            "28.04",
+            "Individual gradient similarity"
+          ],
+          [
+            "GMRel",
+            "30.40",
+            "Relational scoring"
+          ],
+          [
+            "GREATS",
+            "30.27",
+            "Group gradient method"
+          ]
+        ]
+      }
+    ],
+    "note": "表 9 的 8 项任务平均值，200 步 Repro-400M continuation。不同任务表现差异很大，平均分不能替代生成能力分项。",
+    "refs": [
+      [
+        "Paper v1",
+        "https://arxiv.org/html/2610.00779v1"
+      ]
+    ]
+  },
+  {
+    "title": "Gradient diversity targets expensive audits",
+    "section": "Mechanism",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "Within-group gradient diversity predicts the proxy–oracle gap.",
+          "Reported Spearman correlations range from 0.58 to 0.63 across tested settings.",
+          "Audit high-diversity groups with the group oracle and use a cheaper proxy elsewhere."
+        ]
+      }
+    ],
+    "note": "这是预算分配诊断，不是梯度越多样训练价值就一定越高。高 gap 意味着需要更准确估计。第 5 节。",
+    "refs": [
+      [
+        "Paper v1",
+        "https://arxiv.org/html/2610.00779v1"
+      ]
+    ]
+  },
+  {
+    "title": "Limits of the evidence",
+    "section": "Limits",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "The oracle depends on the chosen validation objective and training horizon.",
+          "Groups are deliberately constructed. Real production mixtures may have different interactions.",
+          "Gradient extraction adds compute and memory overhead even when subsampling helps."
+        ]
+      }
+    ],
+    "note": "作者结果支持关系信号值得保留，但不能推出任何 diversity 策略都能提升任意训练任务。",
+    "refs": [
+      [
+        "Paper v1",
+        "https://arxiv.org/html/2610.00779v1"
+      ]
+    ]
+  },
+  {
+    "title": "Curation data model implications",
+    "section": "Applications",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "Inference: preserve synthetic parent IDs and generator versions alongside each record.",
+          "Inference: materialize group membership and selection runs rather than only a scalar quality column.",
+          "Proposed application: store group diagnostics and downstream evaluation deltas as versioned artifacts."
+        ]
+      }
+    ],
+    "note": "工程建议由机制推导，并非论文交付的产品功能。需要可追踪 group 才能复查选数决策。",
+    "refs": [
+      [
+        "Paper v1",
+        "https://arxiv.org/html/2610.00779v1"
+      ]
+    ]
+  },
+  {
+    "title": "A bounded reproduction plan",
+    "section": "Reproduction",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "Rebuild a small proxy-matched pool and compare random, GradSim, and one group method.",
+          "Fix selected tokens, training steps, model initialization, and held-out tasks across arms.",
+          "Measure generation metrics, oracle rank recovery, gradient memory, and audit cost separately."
+        ]
+      }
+    ],
+    "note": "先验证选择信号是否可迁移，再投资全量梯度计算。本文阅读未执行训练，也未验证专用公开代码仓库。",
+    "refs": [
+      [
+        "Paper v1",
+        "https://arxiv.org/html/2610.00779v1"
+      ]
+    ]
+  },
+  {
+    "title": "Adoption decision",
+    "section": "Implications",
+    "blocks": [
+      {
+        "type": "bullets",
+        "items": [
+          "Published claim: group interactions explain selection failures in the tested synthetic settings.",
+          "Inference: per-record scores alone provide an incomplete selection contract.",
+          "Proposed gate: adopt a group diagnostic only after gains survive matched token and compute budgets."
+        ]
+      }
+    ],
+    "note": "决策标准是训练效用与成本共同改善，不能只看离线分数相关性。来源入口及逐页讲解见 sources.md。",
+    "refs": [
+      [
+        "Paper v1",
+        "https://arxiv.org/html/2610.00779v1"
+      ]
+    ]
+  }
+]

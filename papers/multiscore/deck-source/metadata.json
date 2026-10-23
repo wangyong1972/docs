@@ -1,0 +1,15 @@
+{
+  "slug": "multiscore",
+  "title": "MULTI-SCORE: Zero-Shot Multimodal Retrieval",
+  "week": "2026-10-09",
+  "refs": [
+    [
+      "ACL paper",
+      "https://aclanthology.org/2026.acl-long.930.pdf"
+    ],
+    [
+      "Official implementation",
+      "https://github.com/sourajitcs/multiscore"
+    ]
+  ]
+}
